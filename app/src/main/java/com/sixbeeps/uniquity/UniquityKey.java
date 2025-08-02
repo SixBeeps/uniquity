@@ -1,8 +1,22 @@
 package com.sixbeeps.uniquity;
 
+/**
+ * A single key on the Uniquity keyboard.
+ */
 public class UniquityKey {
+
+    /**
+     * Which action the key should take when pressed
+     */
     public enum KeyType {
+        /**
+         * A key that enters text into the text field
+         */
         NORMAL,
+
+        /**
+         * A key that deletes the character before the cursor
+         */
         DELETE
     }
 
@@ -32,18 +46,33 @@ public class UniquityKey {
         }
     }
 
+    /**
+     * Get the <code>KeyType</code> of this key
+     */
     public KeyType getType() {
         return type;
     }
 
+    /**
+     * If this key is a normal key, get the text that should be entered
+     */
     public String getContents() {
         return contents;
     }
 
+    /**
+     * If this key has a label, get it. This should not be used for rendering the key. Instead,
+     * use <code>getDisplayString()</code>.
+     * @see #getDisplayString()
+     */
     public String getLabel() {
         return label;
     }
 
+    /**
+     * Get the appropriate text to use when rendering this key. Returns <code>label</code> unless
+     * this key is a normal key with no label, in which case it returns <code>contents</code>.
+     */
     public String getDisplayString() {
         if (type == KeyType.NORMAL) {
             if (label != null) return label;

@@ -1,7 +1,6 @@
 package com.sixbeeps.uniquity;
 
 import android.content.Context;
-// import android.graphics.Color; // Will be replaced by ContextCompat
 import androidx.core.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -14,15 +13,32 @@ import android.widget.ScrollView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UniquityKeyboardView extends LinearLayout { // Changed from ScrollView
+/**
+ * The main view for the Uniquity Keyboard
+ */
+public class UniquityKeyboardView extends LinearLayout {
+    /**
+     * An interface with methods to be implemented for keyboard events
+     */
     public interface UniquityKeyboardListener {
+        /**
+         * Called when a key is pressed
+         * @param contents The characters to be typed in the input field
+         */
         void onKey(String contents);
+
+        /**
+         * Called when the backspace/delete key is pressed
+         */
         void onDelete();
     }
 
-    private class UniquityKeyboardClickListener implements OnClickListener {
-        private UniquityKeyboardListener listener;
-        private UniquityKey key;
+    /**
+     * A class to handle incoming click events
+     */
+    private static class UniquityKeyboardClickListener implements OnClickListener {
+        private final UniquityKeyboardListener listener;
+        private final UniquityKey key;
 
         public UniquityKeyboardClickListener(UniquityKeyboardListener listener, UniquityKey key) {
             this.listener = listener;
@@ -48,11 +64,11 @@ public class UniquityKeyboardView extends LinearLayout { // Changed from ScrollV
     public List<UniquityKey> keys = new ArrayList<>();
     public UniquityKeyboardListener listener;
 
-    private LinearLayout commandStripLayout; // For non-scrolling command buttons
-    private ScrollView keysScrollView;       // For scrolling keys
-    private LinearLayout rootKeysContainer;  // Holds the grid of keys inside keysScrollView
+    private LinearLayout commandStripLayout;
+    private ScrollView keysScrollView;
+    private LinearLayout rootKeysContainer;
 
-    private static final int KEYBOARD_HEIGHT_DP = 200; // Fixed height for the scrolling key area
+    private static final int KEYBOARD_HEIGHT_DP = 200;
     private int fixedHeightInPx;
 
     public UniquityKeyboardView(Context context) {
@@ -68,6 +84,9 @@ public class UniquityKeyboardView extends LinearLayout { // Changed from ScrollV
         init(context);
     }
 
+    /**
+     * Initialize the UniquityKeyboardView
+     */
     private void init(Context context) {
         setOrientation(LinearLayout.VERTICAL); // Main container is vertical
 
@@ -133,7 +152,7 @@ public class UniquityKeyboardView extends LinearLayout { // Changed from ScrollV
         // Add DELETE key to command strip
         UniquityKey deleteKey = new UniquityKey(UniquityKey.KeyType.DELETE);
         Button deleteButton = new Button(context);
-        deleteButton.setText(deleteKey.getDisplayString()); // Should be "DEL" or similar
+        deleteButton.setText(deleteKey.getDisplayString());
         deleteButton.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
         deleteButton.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background)); // Darker, bluer gray for buttons
 
@@ -143,7 +162,6 @@ public class UniquityKeyboardView extends LinearLayout { // Changed from ScrollV
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
         // Add some margin if desired
-        // params.setMargins(dpToPx(2), dpToPx(2), dpToPx(2), dpToPx(2));
         deleteButton.setLayoutParams(params);
 
 
@@ -188,9 +206,7 @@ public class UniquityKeyboardView extends LinearLayout { // Changed from ScrollV
             if (this.listener != null) {
                 button.setOnClickListener(new UniquityKeyboardClickListener(this.listener, key));
             }
-            if (currentRow != null) {
-                currentRow.addView(button);
-            }
+            currentRow.addView(button);
         }
         // requestLayout() and invalidate() on rootKeysContainer or keysScrollView might be needed
         // if changes are not reflected, but usually addView/removeAllViews handles this.
@@ -202,9 +218,4 @@ public class UniquityKeyboardView extends LinearLayout { // Changed from ScrollV
         refreshCommandStrip(); // Refresh command strip for new listener
         refreshKeysLayout();   // Refresh scrolling keys for new listener
     }
-
-    // Helper for dp to px conversion if margins are added to command buttons
-    // private int dpToPx(int dp) {
-    //    return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
-    // }
 }
