@@ -227,16 +227,13 @@ public class UniquityKeyboardView extends LinearLayout {
             tabButton.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
 
 
-            tabButton.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    currentSelectedGroup = group;
-                    updateKeysForSelectedGroup();
-                    for (View button : tabStripContentLayout.getTouchables()) {
-                        button.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_command_strip_background));
-                    }
-                    v.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
+            tabButton.setOnClickListener(v -> {
+                currentSelectedGroup = group;
+                updateKeysForSelectedGroup();
+                for (View button : tabStripContentLayout.getTouchables()) {
+                    button.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_command_strip_background));
                 }
+                v.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
             });
             tabStripContentLayout.addView(tabButton);
         }
@@ -247,7 +244,6 @@ public class UniquityKeyboardView extends LinearLayout {
      */
     private void updateKeysForSelectedGroup() {
         keys.clear();
-        Context context = getContext();
         if (currentSelectedGroup != null) {
             List<UnicodeCharacter> characters = AppDatabase.INSTANCE.unicodeDao().getUnicodeCharacters(currentSelectedGroup.name);
             if (characters != null) {
@@ -403,9 +399,7 @@ public class UniquityKeyboardView extends LinearLayout {
             if (this.listener != null) {
                 button.setOnClickListener(new UniquityKeyboardClickListener(this.listener, key));
             }
-            if (currentRow != null) {
-                currentRow.addView(button);
-            }
+            currentRow.addView(button);
         }
         rootKeysContainer.requestLayout(); 
     }
