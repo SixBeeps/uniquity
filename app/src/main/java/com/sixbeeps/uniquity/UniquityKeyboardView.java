@@ -248,7 +248,18 @@ public class UniquityKeyboardView extends LinearLayout {
             List<UnicodeCharacter> characters = AppDatabase.INSTANCE.unicodeDao().getUnicodeCharacters(currentSelectedGroup.name);
             if (characters != null) {
                 for (UnicodeCharacter character : characters) {
-                    String text = String.valueOf((char) Integer.parseInt(character.codepoint, 16));
+                    int scalar = Integer.parseInt(character.codepoint, 16);
+
+                    // Handle surrogate pairs if necessary
+                    String text;
+                    if (scalar > 0xFFFF) {
+                        int high = (scalar - 0x10000) / 0x400 + 0xD800;
+                        int low = (scalar - 0x10000) % 0x400 + 0xDC00;
+                        text = new String(Character.toChars(high)) + new String(Character.toChars(low));
+                    } else {
+                        text = new String(Character.toChars(scalar));
+                    }
+
                     UniquityKey key = new UniquityKey(text, text, character.codepoint);
                     keys.add(key);
                 }
