@@ -9,6 +9,11 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.TextView; // Added import
+
+import com.sixbeeps.uniquity.data.AppDatabase;
+import com.sixbeeps.uniquity.data.UnicodeCharacter;
+import com.sixbeeps.uniquity.data.UnicodeGroup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -132,14 +137,14 @@ public class UniquityKeyboardView extends LinearLayout {
         addView(commandStripLayout);
 
 
-        // Add some example keys (DELETE key is now in command strip)
-        keys.add(new UniquityKey("1"));
-        keys.add(new UniquityKey("2"));
-        keys.add(new UniquityKey("3"));
-        for (int i = 4; i <= 40; i++) {
-            keys.add(new UniquityKey(String.valueOf(i)));
+        // Query all known characters from the database and add them to the keys list
+        List<UnicodeGroup> groups = AppDatabase.INSTANCE.unicodeDao().getInstalledUnicodeGroups();
+        for (UnicodeGroup group : groups) {
+            List<UnicodeCharacter> characters = AppDatabase.INSTANCE.unicodeDao().getUnicodeCharacters(group.name);
+            for (UnicodeCharacter character : characters) {
+                keys.add(new UniquityKey(character.character));
+            }
         }
-        // Removed: keys.add(new UniquityKey(UniquityKey.KeyType.DELETE));
 
         refreshCommandStrip();
         refreshKeysLayout();
@@ -149,28 +154,48 @@ public class UniquityKeyboardView extends LinearLayout {
         commandStripLayout.removeAllViews();
         Context context = getContext();
 
-        // Add DELETE key to command strip
-        UniquityKey deleteKey = new UniquityKey(UniquityKey.KeyType.DELETE);
-        Button deleteButton = new Button(context);
-        deleteButton.setText(deleteKey.getDisplayString());
-        deleteButton.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
-        deleteButton.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background)); // Darker, bluer gray for buttons
+        if (keys.isEmpty()) {
+            TextView noKeysTextView = new TextView(context);
+            noKeysTextView.setText("No characters found. Add character sets via Uniquity settings.");
+            noKeysTextView.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
+            
+            LinearLayout.LayoutParams tvParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            // Add some padding to make it look nicer
+            int paddingPx = (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics()
+            );
+            noKeysTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
 
-        // Adjust layout params for command strip buttons if needed, e.g., to not stretch
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, // Adjust width as needed
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        // Add some margin if desired
-        deleteButton.setLayoutParams(params);
+            noKeysTextView.setLayoutParams(tvParams);
+            noKeysTextView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER); // Requires API 17+
+            // Alternatively, for broader compatibility for centering:
+            // noKeysTextView.setGravity(Gravity.CENTER); // Would need import android.view.Gravity
 
+            commandStripLayout.addView(noKeysTextView);
+        } else {
+            // Add DELETE key to command strip
+            UniquityKey deleteKey = new UniquityKey(UniquityKey.KeyType.DELETE);
+            Button deleteButton = new Button(context);
+            deleteButton.setText(deleteKey.getDisplayString());
+            deleteButton.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
+            deleteButton.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
 
-        if (this.listener != null) {
-            deleteButton.setOnClickListener(new UniquityKeyboardClickListener(this.listener, deleteKey));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            deleteButton.setLayoutParams(params);
+
+            if (this.listener != null) {
+                deleteButton.setOnClickListener(new UniquityKeyboardClickListener(this.listener, deleteKey));
+            }
+            commandStripLayout.addView(deleteButton);
+
+            // Add other command buttons here in the future
         }
-        commandStripLayout.addView(deleteButton);
-
-        // Add other command buttons here in the future
     }
 
     // Renamed from refreshLayout to avoid confusion
