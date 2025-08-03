@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Uniquity</string>
+    <string name="warning_no_db">No characters found. Add character sets via Uniquity settings.</string>
 </resources>

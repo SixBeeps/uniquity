@@ -2,6 +2,8 @@ package com.sixbeeps.uniquity;
 
 import android.content.Context;
 import androidx.core.content.ContextCompat;
+
+import android.text.Html;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
@@ -142,7 +144,7 @@ public class UniquityKeyboardView extends LinearLayout {
         for (UnicodeGroup group : groups) {
             List<UnicodeCharacter> characters = AppDatabase.INSTANCE.unicodeDao().getUnicodeCharacters(group.name);
             for (UnicodeCharacter character : characters) {
-                keys.add(new UniquityKey(character.character));
+                keys.add(new UniquityKey(character.character, character.character, character.byteRepresentation));
             }
         }
 
@@ -156,7 +158,7 @@ public class UniquityKeyboardView extends LinearLayout {
 
         if (keys.isEmpty()) {
             TextView noKeysTextView = new TextView(context);
-            noKeysTextView.setText("No characters found. Add character sets via Uniquity settings.");
+            noKeysTextView.setText(R.string.warning_no_db);
             noKeysTextView.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
             
             LinearLayout.LayoutParams tvParams = new LinearLayout.LayoutParams(
@@ -171,30 +173,48 @@ public class UniquityKeyboardView extends LinearLayout {
 
             noKeysTextView.setLayoutParams(tvParams);
             noKeysTextView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER); // Requires API 17+
-            // Alternatively, for broader compatibility for centering:
-            // noKeysTextView.setGravity(Gravity.CENTER); // Would need import android.view.Gravity
-
+            
             commandStripLayout.addView(noKeysTextView);
         } else {
-            // Add DELETE key to command strip
+            // Add DELETE key
             UniquityKey deleteKey = new UniquityKey(UniquityKey.KeyType.DELETE);
             Button deleteButton = new Button(context);
             deleteButton.setText(deleteKey.getDisplayString());
             deleteButton.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
             deleteButton.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
 
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
+            LinearLayout.LayoutParams deleteParams = new LinearLayout.LayoutParams(
+                    0, // width
+                    LinearLayout.LayoutParams.WRAP_CONTENT, // height
+                    1.0f // weight
             );
-            deleteButton.setLayoutParams(params);
+            deleteButton.setLayoutParams(deleteParams);
 
             if (this.listener != null) {
                 deleteButton.setOnClickListener(new UniquityKeyboardClickListener(this.listener, deleteKey));
             }
             commandStripLayout.addView(deleteButton);
 
-            // Add other command buttons here in the future
+            // Add SPACE key
+            UniquityKey spaceKey = new UniquityKey(" ");
+            Button spaceButton = new Button(context);
+            spaceButton.setText("Space");
+            spaceButton.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
+            spaceButton.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
+
+            LinearLayout.LayoutParams spaceParams = new LinearLayout.LayoutParams(
+                    0, // width
+                    LinearLayout.LayoutParams.WRAP_CONTENT, // height
+                    2.0f // weight (making it wider)
+            );
+            spaceButton.setLayoutParams(spaceParams);
+
+            if (this.listener != null) {
+                spaceButton.setOnClickListener(new UniquityKeyboardClickListener(this.listener, spaceKey));
+            }
+            commandStripLayout.addView(spaceButton);
+
+            // Add other command buttons here in the future, adjusting weights as needed
         }
     }
 
@@ -203,7 +223,7 @@ public class UniquityKeyboardView extends LinearLayout {
         rootKeysContainer.removeAllViews();
         Context context = getContext();
         LinearLayout currentRow = null;
-        final int KEYS_PER_ROW = 4;
+        final int KEYS_PER_ROW = 8; // You can adjust this value
 
         for (int i = 0; i < keys.size(); i++) {
             if (i % KEYS_PER_ROW == 0) {
@@ -217,9 +237,14 @@ public class UniquityKeyboardView extends LinearLayout {
 
             UniquityKey key = keys.get(i);
             Button button = new Button(context);
-            button.setText(key.getDisplayString());
+            if (key.getCaption() != null) {
+                button.setText(Html.fromHtml(key.getDisplayString() + "<br /><small><small><font color=\"gray\">" + key.getCaption() + "</font></small></small>"));
+            } else {
+                button.setText(key.getDisplayString());
+            }
+
             button.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
-            button.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background)); // Darker, bluer gray for buttons
+            button.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     0,
@@ -233,8 +258,6 @@ public class UniquityKeyboardView extends LinearLayout {
             }
             currentRow.addView(button);
         }
-        // requestLayout() and invalidate() on rootKeysContainer or keysScrollView might be needed
-        // if changes are not reflected, but usually addView/removeAllViews handles this.
         rootKeysContainer.requestLayout(); 
     }
 

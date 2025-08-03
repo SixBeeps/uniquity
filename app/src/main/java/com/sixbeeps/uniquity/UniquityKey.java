@@ -23,6 +23,7 @@ public class UniquityKey {
     KeyType type;
     String contents;
     String label;
+    String caption;
 
     public UniquityKey(String contents) {
         this.type = KeyType.NORMAL;
@@ -33,6 +34,13 @@ public class UniquityKey {
         this.type = KeyType.NORMAL;
         this.contents = contents;
         this.label = label;
+    }
+
+    public UniquityKey(String contents, String label, String caption) {
+        this.type = KeyType.NORMAL;
+        this.contents = contents;
+        this.label = label;
+        this.caption = caption;
     }
 
     public UniquityKey(KeyType type) {
@@ -80,5 +88,12 @@ public class UniquityKey {
         } else {
             return label;
         }
+    }
+
+    /**
+     * If this key has a caption, get it. For Uniquity, this is the Unicode codepoint.
+     */
+    public String getCaption() {
+        return caption;
     }
 }
