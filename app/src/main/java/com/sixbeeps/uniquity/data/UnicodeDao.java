@@ -12,6 +12,12 @@ public interface UnicodeDao {
     @Query("SELECT * FROM UnicodeGroup WHERE name = :name")
     UnicodeGroup getUnicodeGroup(String name);
 
-    @Query("SELECT * FROM UnicodeCharacter WHERE \"group\" = :group")
+    @Query("SELECT * FROM UnicodeCharacter WHERE groupName = :group")
     List<UnicodeCharacter> getUnicodeCharacters(String group);
+
+    @Query("SELECT * FROM UnicodeCharacter WHERE codepoint = :codepoint")
+    UnicodeCharacter getUnicodeCharacter(String codepoint);
+
+    @Query("SELECT * FROM UnicodeCharacterAlias WHERE codepoint = :codepoint")
+    List<UnicodeCharacterAlias> getUnicodeCharacterAliases(String codepoint);
 }

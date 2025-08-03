@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "2bf53022505e9dc21b6e8904e7a86174",
+    "identityHash": "97f03dcdfb957fe79a7c6c2ed3b6729e",
     "entities": [
       {
         "tableName": "UnicodeGroup",
@@ -24,36 +24,67 @@
       },
       {
         "tableName": "UnicodeCharacter",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`character` TEXT NOT NULL, `byteRepresentation` TEXT, `group` TEXT, PRIMARY KEY(`character`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`codepoint` TEXT NOT NULL, `name` TEXT, `groupName` TEXT NOT NULL, PRIMARY KEY(`codepoint`))",
         "fields": [
           {
-            "fieldPath": "character",
-            "columnName": "character",
+            "fieldPath": "codepoint",
+            "columnName": "codepoint",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "byteRepresentation",
-            "columnName": "byteRepresentation",
+            "fieldPath": "name",
+            "columnName": "name",
             "affinity": "TEXT"
           },
           {
-            "fieldPath": "group",
-            "columnName": "group",
-            "affinity": "TEXT"
+            "fieldPath": "groupName",
+            "columnName": "groupName",
+            "affinity": "TEXT",
+            "notNull": true
           }
         ],
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "character"
+            "codepoint"
+          ]
+        }
+      },
+      {
+        "tableName": "UnicodeCharacterAlias",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `codepoint` TEXT NOT NULL, `alias` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "codepoint",
+            "columnName": "codepoint",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alias",
+            "columnName": "alias",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
           ]
         }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2bf53022505e9dc21b6e8904e7a86174')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '97f03dcdfb957fe79a7c6c2ed3b6729e')"
     ]
   }
 }

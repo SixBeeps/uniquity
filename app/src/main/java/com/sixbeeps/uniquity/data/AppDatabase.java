@@ -9,7 +9,8 @@ import androidx.room.RoomDatabase;
 
 @Database(entities = {
         UnicodeGroup.class,
-        UnicodeCharacter.class
+        UnicodeCharacter.class,
+        UnicodeCharacterAlias.class
 }, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
     public static AppDatabase INSTANCE = null;
@@ -23,7 +24,7 @@ public abstract class AppDatabase extends RoomDatabase {
 
         INSTANCE = Room.databaseBuilder(context, AppDatabase.class, "unicode")
                 .allowMainThreadQueries()
-                .createFromAsset("default.db")
+                .createFromAsset("ucd.db")
                 .build();
     }
 }

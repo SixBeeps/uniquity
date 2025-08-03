@@ -9,7 +9,7 @@ public class UnicodeGroupWithCharacters {
     @Embedded public UnicodeGroup group;
     @Relation(
             parentColumn = "name",
-            entityColumn = "group"
+            entityColumn = "codepoint"
     )
     public List<UnicodeCharacter> characters;
 }

@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">Uniquity</string>
-    <string name="warning_no_db">No characters found. Add character sets via Uniquity settings.</string>
+    <string name="warning_no_char">No characters found. Add character sets via Uniquity settings.</string>
+    <string name="warning_no_group">No groups found.</string>
+    <string name="warning_no_char_in_group">Empty group.</string>
 </resources>

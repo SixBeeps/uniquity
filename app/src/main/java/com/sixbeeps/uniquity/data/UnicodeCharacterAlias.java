@@ -5,14 +5,14 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 @Entity
-public class UnicodeCharacter {
-    @PrimaryKey
+public class UnicodeCharacterAlias {
+    @PrimaryKey(autoGenerate = true)
+    public int id;
+
     @NonNull
     public String codepoint = "";
 
-    public String name = "";
-
     @NonNull
-    public String groupName = "";
+    public String alias = "";
 }
 
