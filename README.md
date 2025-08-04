@@ -1,10 +1,12 @@
-# Uniquity: The Android keyboard with every character ever
+<img src="./branding/logo_wide.png" alt="Uniquity Logo" width="200">
 
-| <img src="./preview.jpg" alt="Uniquity Keyboard Preview" width="300"> |
-| - |
+The Android keyboard with every character ever
 
 ## Overview
 Uniquity is an Android keyboard that aims to have a key for every single Unicode character.
+
+| <img src="./branding/preview.jpg" alt="Uniquity Keyboard Preview" width="300"> |
+| - |
 
 > [!WARNING]
 > This keyboard is still under development and is not yet feature complete. If you're interested in furthering the development of Uniquity, feel free to open an issue or pull request.
