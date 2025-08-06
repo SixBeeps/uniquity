@@ -72,18 +72,14 @@ public class UniquityKeyboardView extends LinearLayout {
     public List<UniquityKey> keys = new ArrayList<>();
     public UniquityKeyboardListener listener;
 
-    private HorizontalScrollView tabStripScrollView;
     private LinearLayout tabStripContentLayout;
-    private ScrollView keysScrollView;
     private LinearLayout rootKeysContainer;
     private LinearLayout commandStripLayout;
-    private View separator;
 
     private List<UnicodeGroup> allUnicodeGroups = new ArrayList<>();
     private UnicodeGroup currentSelectedGroup;
 
     private static final int KEYBOARD_HEIGHT_DP = 200;
-    private int fixedHeightInPx;
 
     public UniquityKeyboardView(Context context) {
         this(context, null);
@@ -102,43 +98,45 @@ public class UniquityKeyboardView extends LinearLayout {
      * Initialize the UniquityKeyboardView
      */
     private void init(Context context) {
-        setOrientation(LinearLayout.VERTICAL); // Main container is vertical
+        setOrientation(LinearLayout.VERTICAL);
 
-        fixedHeightInPx = (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, KEYBOARD_HEIGHT_DP, getResources().getDisplayMetrics());
+        int fixedHeightInPx = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, KEYBOARD_HEIGHT_DP, getResources().getDisplayMetrics());
 
-        // 1. Tab Strip (New)
-        tabStripScrollView = new HorizontalScrollView(context);
+        // Tab Strip
+        HorizontalScrollView tabStripScrollView = new HorizontalScrollView(context);
         tabStripScrollView.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT));
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
         tabStripContentLayout = new LinearLayout(context);
         tabStripContentLayout.setOrientation(LinearLayout.HORIZONTAL);
         tabStripContentLayout.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT));
+                ViewGroup.LayoutParams.WRAP_CONTENT)
+        );
         tabStripScrollView.addView(tabStripContentLayout);
         addView(tabStripScrollView);
 
-        // 2. ScrollView for Keys
-        keysScrollView = new ScrollView(context);
+        // Keybed ScrollView
+        ScrollView keysScrollView = new ScrollView(context);
         LinearLayout.LayoutParams scrollViewParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                fixedHeightInPx // Fixed height for the scroll view
+                fixedHeightInPx
         );
         keysScrollView.setLayoutParams(scrollViewParams);
         addView(keysScrollView);
 
-        // 3. Container for Key Grid (inside ScrollView)
+        // Keybed Layout (inside ScrollView)
         rootKeysContainer = new LinearLayout(context);
         rootKeysContainer.setOrientation(LinearLayout.VERTICAL);
         rootKeysContainer.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT));
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
         keysScrollView.addView(rootKeysContainer);
 
-        // 4. Separator View
-        separator = new View(context);
+        // Separator
+        View separator = new View(context);
         int separatorHeightPx = (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics());
         LinearLayout.LayoutParams separatorParams = new LinearLayout.LayoutParams(
@@ -149,7 +147,7 @@ public class UniquityKeyboardView extends LinearLayout {
         separator.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_separator_color));
         addView(separator);
 
-        // 5. Command Strip
+        // Command Strip
         commandStripLayout = new LinearLayout(context);
         commandStripLayout.setOrientation(LinearLayout.HORIZONTAL);
         commandStripLayout.setLayoutParams(new LinearLayout.LayoutParams(
@@ -158,7 +156,7 @@ public class UniquityKeyboardView extends LinearLayout {
         commandStripLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_command_strip_background));
         addView(commandStripLayout);
 
-        // Load Unicode groups
+        // Load Unicode groups from the database and store them for later
         allUnicodeGroups.clear();
         List<UnicodeGroup> groupsFromDb = AppDatabase.INSTANCE.unicodeDao().getInstalledUnicodeGroups();
         if (groupsFromDb != null) {
@@ -171,8 +169,9 @@ public class UniquityKeyboardView extends LinearLayout {
             currentSelectedGroup = null;
         }
 
+        // Draw all the UI elements
         refreshTabStrip();
-        updateKeysForSelectedGroup(); // This will also call refreshKeysLayout and refreshCommandStrip
+        updateKeysForSelectedGroup();
     }
 
     /**
@@ -182,6 +181,7 @@ public class UniquityKeyboardView extends LinearLayout {
         tabStripContentLayout.removeAllViews();
         Context context = getContext();
 
+        // If there are no groups, display a message
         if (allUnicodeGroups.isEmpty()) {
             TextView noGroupsTextView = new TextView(context);
             noGroupsTextView.setText(R.string.warning_no_group);
@@ -199,6 +199,7 @@ public class UniquityKeyboardView extends LinearLayout {
             return;
         }
 
+        // Otherwise, create tabs for each group
         for (final UnicodeGroup group : allUnicodeGroups) {
             Button tabButton = new Button(context);
             tabButton.setText(group.name.replaceAll("_", " "));
@@ -213,23 +214,23 @@ public class UniquityKeyboardView extends LinearLayout {
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             );
-            // Add some margin between tabs
+
             int marginPx = (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics()
             );
             tabParams.setMargins(marginPx, 0, marginPx, 0);
             tabButton.setLayoutParams(tabParams);
-            
-            // Add padding inside tabs
-             int paddingPx = (int) TypedValue.applyDimension(
+
+            int paddingPx = (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics()
             );
             tabButton.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
 
-
             tabButton.setOnClickListener(v -> {
                 currentSelectedGroup = group;
                 updateKeysForSelectedGroup();
+
+                // Reset the background color of each tab and highlight the selected one
                 for (View button : tabStripContentLayout.getTouchables()) {
                     button.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_command_strip_background));
                 }
@@ -245,7 +246,10 @@ public class UniquityKeyboardView extends LinearLayout {
     private void updateKeysForSelectedGroup() {
         keys.clear();
         if (currentSelectedGroup != null) {
+            // Get all characters from the selected group
             List<UnicodeCharacter> characters = AppDatabase.INSTANCE.unicodeDao().getUnicodeCharacters(currentSelectedGroup.name);
+
+            // If there are characters, create a key for each of them
             if (characters != null) {
                 for (UnicodeCharacter character : characters) {
                     int scalar = Integer.parseInt(character.codepoint, 16);
@@ -265,8 +269,10 @@ public class UniquityKeyboardView extends LinearLayout {
                 }
             }
         }
+
+        // Refresh the UI
         refreshKeysLayout();
-        refreshCommandStrip(); // Command strip might show "no keys" if group is empty
+        refreshCommandStrip();
     }
 
 
@@ -277,80 +283,52 @@ public class UniquityKeyboardView extends LinearLayout {
         commandStripLayout.removeAllViews();
         Context context = getContext();
 
-        if (keys.isEmpty() && (currentSelectedGroup == null || AppDatabase.INSTANCE.unicodeDao().getUnicodeCharacters(currentSelectedGroup.name).isEmpty())) {
-             // This condition now also checks if the selected group itself has no characters,
-             // or if there are no groups at all.
-            TextView noKeysTextView = new TextView(context);
-            if (allUnicodeGroups.isEmpty()){
-                noKeysTextView.setText(R.string.warning_no_group);
-            } else {
-                noKeysTextView.setText(R.string.warning_no_char_in_group);
-            }
-            noKeysTextView.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
-            
-            LinearLayout.LayoutParams tvParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            int paddingPx = (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics()
-            );
-            noKeysTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+        int marginPx = (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()
+        );
 
-            noKeysTextView.setLayoutParams(tvParams);
-            noKeysTextView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            
-            commandStripLayout.addView(noKeysTextView);
-        } else {
-            // Shared margins
-            int marginPx = (int) TypedValue.applyDimension(
-                    TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()
-            );
+        // Add space bar
+        UniquityKey spaceKey = new UniquityKey(" ");
+        Button spaceButton = new Button(context);
+        spaceButton.setText("␣");
+        spaceButton.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
+        spaceButton.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
 
-            // Add SPACE key
-            UniquityKey spaceKey = new UniquityKey(" ");
-            Button spaceButton = new Button(context);
-            spaceButton.setText("␣");
-            spaceButton.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
-            spaceButton.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
+        LinearLayout.LayoutParams spaceParams = new LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                2.0f
+        );
+        spaceParams.setMargins(marginPx, marginPx, marginPx, marginPx);
+        spaceButton.setLayoutParams(spaceParams);
 
-            LinearLayout.LayoutParams spaceParams = new LinearLayout.LayoutParams(
-                    0,
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    2.0f
-            );
-            spaceParams.setMargins(marginPx, marginPx, marginPx, marginPx);
-            spaceButton.setLayoutParams(spaceParams);
-
-            if (this.listener != null) {
-                spaceButton.setOnClickListener(new UniquityKeyboardClickListener(this.listener, spaceKey));
-            }
-            commandStripLayout.addView(spaceButton);
-
-            // Add DELETE key
-            UniquityKey deleteKey = new UniquityKey(UniquityKey.KeyType.DELETE);
-            Button deleteButton = new Button(context);
-            deleteButton.setText(deleteKey.getDisplayString()); // Should be "DELETE" or an icon
-            deleteButton.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
-            deleteButton.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
-
-            LinearLayout.LayoutParams deleteParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            deleteParams.setMargins(marginPx, marginPx, marginPx, marginPx);
-            deleteButton.setLayoutParams(deleteParams);
-
-            if (this.listener != null) {
-                deleteButton.setOnClickListener(new UniquityKeyboardClickListener(this.listener, deleteKey));
-            }
-            commandStripLayout.addView(deleteButton);
+        if (this.listener != null) {
+            spaceButton.setOnClickListener(new UniquityKeyboardClickListener(this.listener, spaceKey));
         }
+        commandStripLayout.addView(spaceButton);
+
+        // Add delete key
+        UniquityKey deleteKey = new UniquityKey(UniquityKey.KeyType.DELETE);
+        Button deleteButton = new Button(context);
+        deleteButton.setText(deleteKey.getDisplayString()); // Should be "DELETE" or an icon
+        deleteButton.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
+        deleteButton.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
+
+        LinearLayout.LayoutParams deleteParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        deleteParams.setMargins(marginPx, marginPx, marginPx, marginPx);
+        deleteButton.setLayoutParams(deleteParams);
+
+        if (this.listener != null) {
+            deleteButton.setOnClickListener(new UniquityKeyboardClickListener(this.listener, deleteKey));
+        }
+        commandStripLayout.addView(deleteButton);
     }
 
     /**
      * Refreshes the layout of the main character keys.
-     * Renamed from refreshLayout to avoid confusion.
      */
     public void refreshKeysLayout() {
         rootKeysContainer.removeAllViews();
@@ -421,9 +399,7 @@ public class UniquityKeyboardView extends LinearLayout {
      */
     public void setUniquityKeyboardListener(UniquityKeyboardListener listener) {
         this.listener = listener;
-        // Refresh all parts of the keyboard that might have clickable elements
-        // or that depend on the listener or the data loaded based on listener availability
-        refreshTabStrip(); // Tabs might have listeners or their appearance could change
-        updateKeysForSelectedGroup(); // This re-populates keys and calls refreshKeysLayout & refreshCommandStrip
+        refreshTabStrip();
+        updateKeysForSelectedGroup();
     }
 }
