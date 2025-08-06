@@ -2,8 +2,6 @@ package com.sixbeeps.uniquity;
 
 import android.content.Context;
 import androidx.core.content.ContextCompat;
-
-import android.text.Html;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
@@ -11,7 +9,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.sixbeeps.uniquity.data.AppDatabase;
@@ -73,10 +70,10 @@ public class UniquityKeyboardView extends LinearLayout {
     public UniquityKeyboardListener listener;
 
     private LinearLayout tabStripContentLayout;
-    private LinearLayout rootKeysContainer;
+    private UniquityKeybedLayout keybed;
     private LinearLayout commandStripLayout;
 
-    private List<UnicodeGroup> allUnicodeGroups = new ArrayList<>();
+    private final List<UnicodeGroup> allUnicodeGroups = new ArrayList<>();
     private UnicodeGroup currentSelectedGroup;
 
     private static final int KEYBOARD_HEIGHT_DP = 200;
@@ -117,23 +114,9 @@ public class UniquityKeyboardView extends LinearLayout {
         tabStripScrollView.addView(tabStripContentLayout);
         addView(tabStripScrollView);
 
-        // Keybed ScrollView
-        ScrollView keysScrollView = new ScrollView(context);
-        LinearLayout.LayoutParams scrollViewParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                fixedHeightInPx
-        );
-        keysScrollView.setLayoutParams(scrollViewParams);
-        addView(keysScrollView);
-
-        // Keybed Layout (inside ScrollView)
-        rootKeysContainer = new LinearLayout(context);
-        rootKeysContainer.setOrientation(LinearLayout.VERTICAL);
-        rootKeysContainer.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        ));
-        keysScrollView.addView(rootKeysContainer);
+        // Keybed
+        keybed = new UniquityKeybedLayout(context, fixedHeightInPx);
+        addView(keybed);
 
         // Separator
         View separator = new View(context);
@@ -157,14 +140,10 @@ public class UniquityKeyboardView extends LinearLayout {
         addView(commandStripLayout);
 
         // Load Unicode groups from the database and store them for later
-        allUnicodeGroups.clear();
-        List<UnicodeGroup> groupsFromDb = AppDatabase.INSTANCE.unicodeDao().getInstalledUnicodeGroups();
-        if (groupsFromDb != null) {
-            allUnicodeGroups.addAll(groupsFromDb);
-        }
-
+        fetchUnicodeGroups();
         if (!allUnicodeGroups.isEmpty()) {
-            currentSelectedGroup = allUnicodeGroups.get(0); // Select the first group by default
+            // If there are groups, select the first one
+            currentSelectedGroup = allUnicodeGroups.get(0);
         } else {
             currentSelectedGroup = null;
         }
@@ -172,6 +151,17 @@ public class UniquityKeyboardView extends LinearLayout {
         // Draw all the UI elements
         refreshTabStrip();
         updateKeysForSelectedGroup();
+    }
+
+    /**
+     * Loads Unicode groups from the database and stores them in <code>allUnicodeGroups</code>
+     */
+    public void fetchUnicodeGroups() {
+        allUnicodeGroups.clear();
+        List<UnicodeGroup> groupsFromDb = AppDatabase.INSTANCE.unicodeDao().getInstalledUnicodeGroups();
+        if (groupsFromDb != null) {
+            allUnicodeGroups.addAll(groupsFromDb);
+        }
     }
 
     /**
@@ -310,7 +300,7 @@ public class UniquityKeyboardView extends LinearLayout {
         // Add delete key
         UniquityKey deleteKey = new UniquityKey(UniquityKey.KeyType.DELETE);
         Button deleteButton = new Button(context);
-        deleteButton.setText(deleteKey.getDisplayString()); // Should be "DELETE" or an icon
+        deleteButton.setText(deleteKey.getDisplayString());
         deleteButton.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
         deleteButton.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
 
@@ -331,7 +321,7 @@ public class UniquityKeyboardView extends LinearLayout {
      * Refreshes the layout of the main character keys.
      */
     public void refreshKeysLayout() {
-        rootKeysContainer.removeAllViews();
+        keybed.root.removeAllViews();
         Context context = getContext();
         LinearLayout currentRow = null;
         final int KEYS_PER_ROW = 8;
@@ -351,8 +341,8 @@ public class UniquityKeyboardView extends LinearLayout {
             noCharsInGroupTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
             noCharsInGroupTextView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             noCharsInGroupTextView.setLayoutParams(tvParams);
-            rootKeysContainer.addView(noCharsInGroupTextView);
-            rootKeysContainer.requestLayout();
+            keybed.root.addView(noCharsInGroupTextView);
+            keybed.root.requestLayout();
             return;
         }
 
@@ -364,33 +354,18 @@ public class UniquityKeyboardView extends LinearLayout {
                 currentRow.setLayoutParams(new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT));
-                rootKeysContainer.addView(currentRow);
+                keybed.root.addView(currentRow);
             }
 
             UniquityKey key = keys.get(i);
-            Button button = new Button(context);
-            if (key.getCaption() != null && !key.getCaption().isEmpty()) {
-                button.setText(Html.fromHtml(key.getDisplayString() + "<br /><small><small><font color=\"gray\">" + key.getCaption() + "</font></small></small>"));
-            } else {
-                button.setText(key.getDisplayString());
-            }
-
-            button.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
-            button.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
-
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    0,
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    1.0f
-            );
-            button.setLayoutParams(params);
+            UniquityKeyView button = new UniquityKeyView(context, key);
 
             if (this.listener != null) {
                 button.setOnClickListener(new UniquityKeyboardClickListener(this.listener, key));
             }
             currentRow.addView(button);
         }
-        rootKeysContainer.requestLayout(); 
+        keybed.root.requestLayout();
     }
 
     /**
