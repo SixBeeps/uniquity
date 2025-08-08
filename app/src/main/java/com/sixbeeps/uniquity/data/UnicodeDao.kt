@@ -1,23 +1,22 @@
-package com.sixbeeps.uniquity.data;
+package com.sixbeeps.uniquity.data
 
-import androidx.room.Dao;
-import androidx.room.Query;
-import java.util.List;
+import androidx.room.Dao
+import androidx.room.Query
 
 @Dao
-public interface UnicodeDao {
-    @Query("SELECT * FROM UnicodeGroup")
-    List<UnicodeGroup> getInstalledUnicodeGroups();
+interface UnicodeDao {
+    @get:Query("SELECT * FROM UnicodeGroup")
+    val installedUnicodeGroups: MutableList<UnicodeGroup>?
 
     @Query("SELECT * FROM UnicodeGroup WHERE name = :name")
-    UnicodeGroup getUnicodeGroup(String name);
+    fun getUnicodeGroup(name: String?): UnicodeGroup?
 
     @Query("SELECT * FROM UnicodeCharacter WHERE groupName = :group")
-    List<UnicodeCharacter> getUnicodeCharacters(String group);
+    fun getUnicodeCharacters(group: String?): MutableList<UnicodeCharacter>?
 
     @Query("SELECT * FROM UnicodeCharacter WHERE codepoint = :codepoint")
-    UnicodeCharacter getUnicodeCharacter(String codepoint);
+    fun getUnicodeCharacter(codepoint: String?): UnicodeCharacter?
 
     @Query("SELECT * FROM UnicodeCharacterAlias WHERE codepoint = :codepoint")
-    List<UnicodeCharacterAlias> getUnicodeCharacterAliases(String codepoint);
+    fun getUnicodeCharacterAliases(codepoint: String?): MutableList<UnicodeCharacterAlias>?
 }

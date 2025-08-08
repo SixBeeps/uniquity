@@ -1,18 +1,18 @@
-package com.sixbeeps.uniquity.data;
+package com.sixbeeps.uniquity.data
 
-import androidx.annotation.NonNull;
-import androidx.room.Entity;
-import androidx.room.PrimaryKey;
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
 @Entity
-public class UnicodeCharacterAlias {
+class UnicodeCharacterAlias {
+    @JvmField
     @PrimaryKey(autoGenerate = true)
-    public int id;
+    var id: Int = 0
 
-    @NonNull
-    public String codepoint = "";
+    @JvmField
+    var codepoint: String = ""
 
-    @NonNull
-    public String alias = "";
+    @JvmField
+    var alias: String = ""
 }
 

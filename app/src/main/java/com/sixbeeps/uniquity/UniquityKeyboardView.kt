@@ -1,380 +1,440 @@
-package com.sixbeeps.uniquity;
+package com.sixbeeps.uniquity
 
-import android.content.Context;
-import androidx.core.content.ContextCompat;
-import android.util.AttributeSet;
-import android.util.TypedValue;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.HorizontalScrollView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
-import com.sixbeeps.uniquity.data.AppDatabase;
-import com.sixbeeps.uniquity.data.UnicodeCharacter;
-import com.sixbeeps.uniquity.data.UnicodeGroup;
-
-import java.util.ArrayList;
-import java.util.List;
+import android.content.Context
+import android.util.AttributeSet
+import android.util.TypedValue
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.HorizontalScrollView
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import com.sixbeeps.uniquity.data.AppDatabase
+import com.sixbeeps.uniquity.data.UnicodeGroup
 
 /**
  * The main view for the Uniquity Keyboard
  */
-public class UniquityKeyboardView extends LinearLayout {
+class UniquityKeyboardView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : LinearLayout(context, attrs, defStyleAttr) {
     /**
      * An interface with methods to be implemented for keyboard events
      */
-    public interface UniquityKeyboardListener {
+    interface UniquityKeyboardListener {
         /**
          * Called when a key is pressed
          * @param contents The characters to be typed in the input field
          */
-        void onKey(String contents);
+        fun onKey(contents: String?)
 
         /**
          * Called when the backspace/delete key is pressed
          */
-        void onDelete();
+        fun onDelete()
     }
 
     /**
      * A class to handle incoming click events
      */
-    private static class UniquityKeyboardClickListener implements OnClickListener {
-        private final UniquityKeyboardListener listener;
-        private final UniquityKey key;
-
-        public UniquityKeyboardClickListener(UniquityKeyboardListener listener, UniquityKey key) {
-            this.listener = listener;
-            this.key = key;
-        }
-
-        @Override
-        public void onClick(View view) {
+    private class UniquityKeyboardClickListener(
+        private val listener: UniquityKeyboardListener?,
+        private val key: UniquityKey
+    ) : OnClickListener {
+        override fun onClick(view: View?) {
             if (listener != null) {
-                UniquityKey.KeyType type = key.getType();
+                val type = key.type
                 if (type == UniquityKey.KeyType.DELETE) {
-                    listener.onDelete();
+                    listener.onDelete()
                 } else if (type == UniquityKey.KeyType.NORMAL) {
-                    String contents = key.getContents();
+                    val contents = key.contents
                     if (contents != null && !contents.isEmpty()) {
-                        listener.onKey(key.getContents());
+                        listener.onKey(key.contents)
                     }
                 }
             }
         }
     }
 
-    public List<UniquityKey> keys = new ArrayList<>();
-    public UniquityKeyboardListener listener;
+    var keys: MutableList<UniquityKey> = ArrayList()
+    var listener: UniquityKeyboardListener? = null
 
-    private LinearLayout tabStripContentLayout;
-    private UniquityKeybedLayout keybed;
-    private LinearLayout commandStripLayout;
+    private lateinit var tabStripContentLayout: LinearLayout
+    private lateinit var keybed: UniquityKeybedLayout
+    private lateinit var commandStripLayout: LinearLayout
 
-    private final List<UnicodeGroup> allUnicodeGroups = new ArrayList<>();
-    private UnicodeGroup currentSelectedGroup;
+    private val allUnicodeGroups: MutableList<UnicodeGroup> = ArrayList()
+    private var currentSelectedGroup: UnicodeGroup? = null
 
-    private static final int KEYBOARD_HEIGHT_DP = 200;
-
-    public UniquityKeyboardView(Context context) {
-        this(context, null);
-    }
-
-    public UniquityKeyboardView(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public UniquityKeyboardView(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init(context);
+    init {
+        init(context)
     }
 
     /**
      * Initialize the UniquityKeyboardView
      */
-    private void init(Context context) {
-        setOrientation(LinearLayout.VERTICAL);
+    private fun init(context: Context) {
+        orientation = VERTICAL
 
-        int fixedHeightInPx = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, KEYBOARD_HEIGHT_DP, getResources().getDisplayMetrics());
+        val fixedHeightInPx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            KEYBOARD_HEIGHT_DP.toFloat(),
+            resources.displayMetrics
+        ).toInt()
 
         // Tab Strip
-        HorizontalScrollView tabStripScrollView = new HorizontalScrollView(context);
-        tabStripScrollView.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        ));
-        tabStripContentLayout = new LinearLayout(context);
-        tabStripContentLayout.setOrientation(LinearLayout.HORIZONTAL);
-        tabStripContentLayout.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT)
-        );
-        tabStripScrollView.addView(tabStripContentLayout);
-        addView(tabStripScrollView);
+        val tabStripScrollView = HorizontalScrollView(context)
+        tabStripScrollView.layoutParams = LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            LayoutParams.WRAP_CONTENT
+        )
+        tabStripContentLayout = LinearLayout(context)
+        tabStripContentLayout.orientation = HORIZONTAL
+        tabStripContentLayout.layoutParams = ViewGroup.LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            LayoutParams.WRAP_CONTENT
+        )
+        tabStripScrollView.addView(tabStripContentLayout)
+        addView(tabStripScrollView)
 
         // Keybed
-        keybed = new UniquityKeybedLayout(context, fixedHeightInPx);
-        addView(keybed);
+        keybed = UniquityKeybedLayout(context, fixedHeightInPx)
+        addView(keybed)
 
         // Separator
-        View separator = new View(context);
-        int separatorHeightPx = (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics());
-        LinearLayout.LayoutParams separatorParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                separatorHeightPx
-        );
-        separator.setLayoutParams(separatorParams);
-        separator.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_separator_color));
-        addView(separator);
+        val separator = View(context)
+        val separatorHeightPx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, 1f, resources.displayMetrics
+        ).toInt()
+        val separatorParams = LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            separatorHeightPx
+        )
+        separator.layoutParams = separatorParams
+        separator.setBackgroundColor(
+            ContextCompat.getColor(
+                context,
+                R.color.uniquity_separator_color
+            )
+        )
+        addView(separator)
 
         // Command Strip
-        commandStripLayout = new LinearLayout(context);
-        commandStripLayout.setOrientation(LinearLayout.HORIZONTAL);
-        commandStripLayout.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT));
-        commandStripLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_command_strip_background));
-        addView(commandStripLayout);
+        commandStripLayout = LinearLayout(context)
+        commandStripLayout.orientation = HORIZONTAL
+        commandStripLayout.layoutParams = LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            LayoutParams.WRAP_CONTENT
+        )
+        commandStripLayout.setBackgroundColor(
+            ContextCompat.getColor(
+                context,
+                R.color.uniquity_command_strip_background
+            )
+        )
+        addView(commandStripLayout)
 
         // Load Unicode groups from the database and store them for later
-        fetchUnicodeGroups();
-        if (!allUnicodeGroups.isEmpty()) {
+        fetchUnicodeGroups()
+        currentSelectedGroup = if (!allUnicodeGroups.isEmpty()) {
             // If there are groups, select the first one
-            currentSelectedGroup = allUnicodeGroups.get(0);
+            allUnicodeGroups[0]
         } else {
-            currentSelectedGroup = null;
+            null
         }
 
         // Draw all the UI elements
-        refreshTabStrip();
-        updateKeysForSelectedGroup();
+        refreshTabStrip()
+        updateKeysForSelectedGroup()
     }
 
     /**
-     * Loads Unicode groups from the database and stores them in <code>allUnicodeGroups</code>
+     * Loads Unicode groups from the database and stores them in `allUnicodeGroups`
      */
-    public void fetchUnicodeGroups() {
-        allUnicodeGroups.clear();
-        List<UnicodeGroup> groupsFromDb = AppDatabase.INSTANCE.unicodeDao().getInstalledUnicodeGroups();
+    fun fetchUnicodeGroups() {
+        allUnicodeGroups.clear()
+        val groupsFromDb = AppDatabase.INSTANCE!!.unicodeDao().installedUnicodeGroups
         if (groupsFromDb != null) {
-            allUnicodeGroups.addAll(groupsFromDb);
+            allUnicodeGroups.addAll(groupsFromDb)
         }
     }
 
     /**
      * Refreshes the tab strip with Unicode group names.
      */
-    private void refreshTabStrip() {
-        tabStripContentLayout.removeAllViews();
-        Context context = getContext();
+    private fun refreshTabStrip() {
+        tabStripContentLayout.removeAllViews()
+        val context = getContext()
 
         // If there are no groups, display a message
         if (allUnicodeGroups.isEmpty()) {
-            TextView noGroupsTextView = new TextView(context);
-            noGroupsTextView.setText(R.string.warning_no_group);
-            noGroupsTextView.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
-            LinearLayout.LayoutParams tvParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            int paddingPx = (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics()
-            );
-            noGroupsTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
-            noGroupsTextView.setLayoutParams(tvParams);
-            tabStripContentLayout.addView(noGroupsTextView);
-            return;
+            val noGroupsTextView = TextView(context)
+            noGroupsTextView.setText(R.string.warning_no_group)
+            noGroupsTextView.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.uniquity_button_text_color
+                )
+            )
+            val tvParams = LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            )
+            val paddingPx = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 8f, resources.displayMetrics
+            ).toInt()
+            noGroupsTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
+            noGroupsTextView.layoutParams = tvParams
+            tabStripContentLayout.addView(noGroupsTextView)
+            return
         }
 
         // Otherwise, create tabs for each group
-        for (final UnicodeGroup group : allUnicodeGroups) {
-            Button tabButton = new Button(context);
-            tabButton.setText(group.name.replaceAll("_", " "));
-            tabButton.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
-            if (group.equals(currentSelectedGroup)) {
-                tabButton.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
+        for (group in allUnicodeGroups) {
+            val tabButton = Button(context)
+            tabButton.text = group.name.replace("_".toRegex(), " ")
+            tabButton.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.uniquity_button_text_color
+                )
+            )
+            if (group == currentSelectedGroup) {
+                tabButton.setBackgroundColor(
+                    ContextCompat.getColor(
+                        context,
+                        R.color.uniquity_button_background
+                    )
+                )
             } else {
-                tabButton.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_command_strip_background));
+                tabButton.setBackgroundColor(
+                    ContextCompat.getColor(
+                        context,
+                        R.color.uniquity_command_strip_background
+                    )
+                )
             }
 
-            LinearLayout.LayoutParams tabParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            );
+            val tabParams = LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            )
 
-            int marginPx = (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics()
-            );
-            tabParams.setMargins(marginPx, 0, marginPx, 0);
-            tabButton.setLayoutParams(tabParams);
+            val marginPx = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 2f, resources.displayMetrics
+            ).toInt()
+            tabParams.setMargins(marginPx, 0, marginPx, 0)
+            tabButton.layoutParams = tabParams
 
-            int paddingPx = (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics()
-            );
-            tabButton.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+            val paddingPx = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 8f, resources.displayMetrics
+            ).toInt()
+            tabButton.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
 
-            tabButton.setOnClickListener(v -> {
-                currentSelectedGroup = group;
-                updateKeysForSelectedGroup();
+            tabButton.setOnClickListener { v: View? ->
+                currentSelectedGroup = group
+                updateKeysForSelectedGroup()
 
                 // Reset the background color of each tab and highlight the selected one
-                for (View button : tabStripContentLayout.getTouchables()) {
-                    button.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_command_strip_background));
+                for (button in tabStripContentLayout.touchables) {
+                    button.setBackgroundColor(
+                        ContextCompat.getColor(
+                            context,
+                            R.color.uniquity_command_strip_background
+                        )
+                    )
                 }
-                v.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
-            });
-            tabStripContentLayout.addView(tabButton);
+                v!!.setBackgroundColor(
+                    ContextCompat.getColor(
+                        context,
+                        R.color.uniquity_button_background
+                    )
+                )
+            }
+            tabStripContentLayout.addView(tabButton)
         }
     }
 
     /**
      * Updates the main key grid with characters from the currently selected Unicode group.
      */
-    private void updateKeysForSelectedGroup() {
-        keys.clear();
+    private fun updateKeysForSelectedGroup() {
+        keys.clear()
         if (currentSelectedGroup != null) {
             // Get all characters from the selected group
-            List<UnicodeCharacter> characters = AppDatabase.INSTANCE.unicodeDao().getUnicodeCharacters(currentSelectedGroup.name);
+            val characters = AppDatabase.INSTANCE!!.unicodeDao().getUnicodeCharacters(
+                currentSelectedGroup!!.name
+            )
 
             // If there are characters, create a key for each of them
             if (characters != null) {
-                for (UnicodeCharacter character : characters) {
-                    int scalar = Integer.parseInt(character.codepoint, 16);
+                for (character in characters) {
+                    val scalar = character.codepoint.toInt(16)
 
                     // Handle surrogate pairs if necessary
-                    String text;
+                    val text: String?
                     if (scalar > 0xFFFF) {
-                        int high = (scalar - 0x10000) / 0x400 + 0xD800;
-                        int low = (scalar - 0x10000) % 0x400 + 0xDC00;
-                        text = new String(Character.toChars(high)) + new String(Character.toChars(low));
+                        val high = (scalar - 0x10000) / 0x400 + 0xD800
+                        val low = (scalar - 0x10000) % 0x400 + 0xDC00
+                        text = String(Character.toChars(high)) + String(Character.toChars(low))
                     } else {
-                        text = new String(Character.toChars(scalar));
+                        text = String(Character.toChars(scalar))
                     }
 
-                    UniquityKey key = new UniquityKey(text, text, character.codepoint);
-                    keys.add(key);
+                    val key = UniquityKey(text, text, character.codepoint)
+                    keys.add(key)
                 }
             }
         }
 
         // Refresh the UI
-        refreshKeysLayout();
-        refreshCommandStrip();
+        refreshKeysLayout()
+        refreshCommandStrip()
     }
 
 
     /**
      * Refreshes the command strip
      */
-    private void refreshCommandStrip() {
-        commandStripLayout.removeAllViews();
-        Context context = getContext();
+    private fun refreshCommandStrip() {
+        commandStripLayout.removeAllViews()
+        val context = getContext()
 
-        int marginPx = (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()
-        );
+        val marginPx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, 1f, resources.displayMetrics
+        ).toInt()
 
         // Add space bar
-        UniquityKey spaceKey = new UniquityKey(" ");
-        Button spaceButton = new Button(context);
-        spaceButton.setText("␣");
-        spaceButton.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
-        spaceButton.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
+        val spaceKey = UniquityKey(" ")
+        val spaceButton = Button(context)
+        spaceButton.text = "␣"
+        spaceButton.setTextColor(
+            ContextCompat.getColor(
+                context,
+                R.color.uniquity_button_text_color
+            )
+        )
+        spaceButton.setBackgroundColor(
+            ContextCompat.getColor(
+                context,
+                R.color.uniquity_button_background
+            )
+        )
 
-        LinearLayout.LayoutParams spaceParams = new LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                2.0f
-        );
-        spaceParams.setMargins(marginPx, marginPx, marginPx, marginPx);
-        spaceButton.setLayoutParams(spaceParams);
+        val spaceParams = LayoutParams(
+            0,
+            LayoutParams.WRAP_CONTENT,
+            2.0f
+        )
+        spaceParams.setMargins(marginPx, marginPx, marginPx, marginPx)
+        spaceButton.layoutParams = spaceParams
 
         if (this.listener != null) {
-            spaceButton.setOnClickListener(new UniquityKeyboardClickListener(this.listener, spaceKey));
+            spaceButton.setOnClickListener(UniquityKeyboardClickListener(this.listener, spaceKey))
         }
-        commandStripLayout.addView(spaceButton);
+        commandStripLayout.addView(spaceButton)
 
         // Add delete key
-        UniquityKey deleteKey = new UniquityKey(UniquityKey.KeyType.DELETE);
-        Button deleteButton = new Button(context);
-        deleteButton.setText(deleteKey.getDisplayString());
-        deleteButton.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
-        deleteButton.setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
+        val deleteKey = UniquityKey(UniquityKey.KeyType.DELETE)
+        val deleteButton = Button(context)
+        deleteButton.text = deleteKey.displayString
+        deleteButton.setTextColor(
+            ContextCompat.getColor(
+                context,
+                R.color.uniquity_button_text_color
+            )
+        )
+        deleteButton.setBackgroundColor(
+            ContextCompat.getColor(
+                context,
+                R.color.uniquity_button_background
+            )
+        )
 
-        LinearLayout.LayoutParams deleteParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        deleteParams.setMargins(marginPx, marginPx, marginPx, marginPx);
-        deleteButton.setLayoutParams(deleteParams);
+        val deleteParams = LayoutParams(
+            LayoutParams.WRAP_CONTENT,
+            LayoutParams.WRAP_CONTENT
+        )
+        deleteParams.setMargins(marginPx, marginPx, marginPx, marginPx)
+        deleteButton.layoutParams = deleteParams
 
         if (this.listener != null) {
-            deleteButton.setOnClickListener(new UniquityKeyboardClickListener(this.listener, deleteKey));
+            deleteButton.setOnClickListener(UniquityKeyboardClickListener(this.listener, deleteKey))
         }
-        commandStripLayout.addView(deleteButton);
+        commandStripLayout.addView(deleteButton)
     }
 
     /**
      * Refreshes the layout of the main character keys.
      */
-    public void refreshKeysLayout() {
-        keybed.root.removeAllViews();
-        Context context = getContext();
-        LinearLayout currentRow = null;
-        final int KEYS_PER_ROW = 8;
+    fun refreshKeysLayout() {
+        keybed.root.removeAllViews()
+        val context = getContext()
+        var currentRow: LinearLayout? = null
+        val KEYS_PER_ROW = 8
 
         if (keys.isEmpty() && currentSelectedGroup != null) {
             // Display message if selected group has no characters
-            TextView noCharsInGroupTextView = new TextView(context);
-            noCharsInGroupTextView.setText(R.string.warning_no_char_in_group);
-            noCharsInGroupTextView.setTextColor(ContextCompat.getColor(context,R.color.uniquity_button_text_color));
-             LinearLayout.LayoutParams tvParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            int paddingPx = (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 16, getResources().getDisplayMetrics()
-            );
-            noCharsInGroupTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
-            noCharsInGroupTextView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            noCharsInGroupTextView.setLayoutParams(tvParams);
-            keybed.root.addView(noCharsInGroupTextView);
-            keybed.root.requestLayout();
-            return;
+            val noCharsInGroupTextView = TextView(context)
+            noCharsInGroupTextView.setText(R.string.warning_no_char_in_group)
+            noCharsInGroupTextView.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.uniquity_button_text_color
+                )
+            )
+            val tvParams = LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+            )
+            val paddingPx = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 16f, resources.displayMetrics
+            ).toInt()
+            noCharsInGroupTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
+            noCharsInGroupTextView.textAlignment = TEXT_ALIGNMENT_CENTER
+            noCharsInGroupTextView.layoutParams = tvParams
+            keybed.root.addView(noCharsInGroupTextView)
+            keybed.root.requestLayout()
+            return
         }
 
 
-        for (int i = 0; i < keys.size(); i++) {
+        for (i in keys.indices) {
             if (i % KEYS_PER_ROW == 0) {
-                currentRow = new LinearLayout(context);
-                currentRow.setOrientation(LinearLayout.HORIZONTAL);
-                currentRow.setLayoutParams(new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT));
-                keybed.root.addView(currentRow);
+                currentRow = LinearLayout(context)
+                currentRow.orientation = HORIZONTAL
+                currentRow.layoutParams = LayoutParams(
+                    LayoutParams.MATCH_PARENT,
+                    LayoutParams.WRAP_CONTENT
+                )
+                keybed.root.addView(currentRow)
             }
 
-            UniquityKey key = keys.get(i);
-            UniquityKeyView button = new UniquityKeyView(context, key);
+            val key = keys[i]
+            val button = UniquityKeyView(context, key)
 
             if (this.listener != null) {
-                button.setOnClickListener(new UniquityKeyboardClickListener(this.listener, key));
+                button.setOnClickListener(UniquityKeyboardClickListener(this.listener, key))
             }
-            currentRow.addView(button);
+            currentRow!!.addView(button)
         }
-        keybed.root.requestLayout();
+        keybed.root.requestLayout()
     }
 
     /**
      * Sets the listener for keyboard events.
      * @param listener The listener to be notified of keyboard events.
      */
-    public void setUniquityKeyboardListener(UniquityKeyboardListener listener) {
-        this.listener = listener;
-        refreshTabStrip();
-        updateKeysForSelectedGroup();
+    fun setUniquityKeyboardListener(listener: UniquityKeyboardListener?) {
+        this.listener = listener
+        refreshTabStrip()
+        updateKeysForSelectedGroup()
+    }
+
+    companion object {
+        private const val KEYBOARD_HEIGHT_DP = 200
     }
 }

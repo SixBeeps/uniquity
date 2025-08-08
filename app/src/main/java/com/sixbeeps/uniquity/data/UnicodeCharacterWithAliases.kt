@@ -1,15 +1,12 @@
-package com.sixbeeps.uniquity.data;
+package com.sixbeeps.uniquity.data
 
-import androidx.room.Embedded;
-import androidx.room.Relation;
+import androidx.room.Embedded
+import androidx.room.Relation
 
-import java.util.List;
+class UnicodeCharacterWithAliases {
+    @Embedded
+    var character: UnicodeCharacter? = null
 
-public class UnicodeCharacterWithAliases {
-    @Embedded public UnicodeCharacter character;
-    @Relation(
-            parentColumn = "codepoint",
-            entityColumn = "id"
-    )
-    public List<UnicodeCharacterAlias> aliases;
+    @Relation(parentColumn = "codepoint", entityColumn = "id")
+    var aliases: MutableList<UnicodeCharacterAlias?>? = null
 }

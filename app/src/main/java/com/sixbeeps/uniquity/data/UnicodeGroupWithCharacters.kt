@@ -1,15 +1,12 @@
-package com.sixbeeps.uniquity.data;
+package com.sixbeeps.uniquity.data
 
-import androidx.room.Embedded;
-import androidx.room.Relation;
+import androidx.room.Embedded
+import androidx.room.Relation
 
-import java.util.List;
+class UnicodeGroupWithCharacters {
+    @Embedded
+    var group: UnicodeGroup? = null
 
-public class UnicodeGroupWithCharacters {
-    @Embedded public UnicodeGroup group;
-    @Relation(
-            parentColumn = "name",
-            entityColumn = "codepoint"
-    )
-    public List<UnicodeCharacter> characters;
+    @Relation(parentColumn = "name", entityColumn = "codepoint")
+    var characters: MutableList<UnicodeCharacter?>? = null
 }

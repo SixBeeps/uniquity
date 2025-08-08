@@ -1,44 +1,39 @@
-package com.sixbeeps.uniquity;
+package com.sixbeeps.uniquity
 
-import android.content.Context;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
+import android.content.Context
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.ScrollView
 
-public class UniquityKeybedLayout extends ScrollView {
+class UniquityKeybedLayout @JvmOverloads constructor(context: Context?, height: Int = 10) :
+    ScrollView(context) {
     /**
      * Container for key rows
      */
-    protected LinearLayout root;
+    @JvmField
+    var root: LinearLayout = LinearLayout(context)
 
     /**
      * Primary constructor
      * @param context Application context
      * @param height Height of the keybed, in pixels
      */
-    public UniquityKeybedLayout(Context context, int height) {
-        super(context);
-
-        // Create a container for the keys
-        root = new LinearLayout(context);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        ));
-        addView(root);
-
-        // Set the height of the view
-        setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                height
-        ));
-    }
-
     /**
      * Backwards compatibility constructor, defaults height to 10px
      */
-    public UniquityKeybedLayout(Context context) {
-        this(context, 10);
+    init {
+        // Set up key container
+        root.orientation = LinearLayout.VERTICAL
+        root.layoutParams = ViewGroup.LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            LayoutParams.WRAP_CONTENT
+        )
+        addView(root)
+
+        // Set the height of the view
+        layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            height
+        )
     }
 }

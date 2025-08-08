@@ -1,31 +1,30 @@
-package com.sixbeeps.uniquity;
+package com.sixbeeps.uniquity
 
-import android.inputmethodservice.InputMethodService;
-import android.view.inputmethod.InputConnection;
-import android.view.View;
+import android.inputmethodservice.InputMethodService
+import android.view.View
 
-public class UniquityInputMethodService extends InputMethodService implements UniquityKeyboardView.UniquityKeyboardListener {
-
-    @Override
-    public View onCreateInputView() {
-        UniquityKeyboardView kv = new UniquityKeyboardView(this);
-        kv.setUniquityKeyboardListener(this);
-        return kv;
+/**
+ * Defines Uniquity as an input method service which can be used to manipulate
+ * text in the input field.
+ */
+class UniquityInputMethodService : InputMethodService(), UniquityKeyboardView.UniquityKeyboardListener {
+    override fun onCreateInputView(): View {
+        val kv = UniquityKeyboardView(this)
+        kv.setUniquityKeyboardListener(this)
+        return kv
     }
 
-    @Override
-    public void onKey(String contents) {
-        InputConnection ic = getCurrentInputConnection();
-        if (ic == null) return;
+    override fun onKey(contents: String?) {
+        val ic = currentInputConnection
+        if (ic == null) return
 
-        ic.commitText(contents, 1);
+        ic.commitText(contents, 1)
     }
 
-    @Override
-    public void onDelete() {
-        InputConnection ic = getCurrentInputConnection();
-        if (ic == null) return;
+    override fun onDelete() {
+        val ic = currentInputConnection
+        if (ic == null) return
 
-        ic.deleteSurroundingText(1, 0);
+        ic.deleteSurroundingText(1, 0)
     }
 }

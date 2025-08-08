@@ -1,18 +1,18 @@
-package com.sixbeeps.uniquity.data;
+package com.sixbeeps.uniquity.data
 
-import androidx.annotation.NonNull;
-import androidx.room.Entity;
-import androidx.room.PrimaryKey;
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
 @Entity
-public class UnicodeCharacter {
+class UnicodeCharacter {
+    @JvmField
     @PrimaryKey
-    @NonNull
-    public String codepoint = "";
+    var codepoint: String = ""
 
-    public String name = "";
+    @JvmField
+    var name: String = ""
 
-    @NonNull
-    public String groupName = "";
+    @JvmField
+    var groupName: String = ""
 }
 

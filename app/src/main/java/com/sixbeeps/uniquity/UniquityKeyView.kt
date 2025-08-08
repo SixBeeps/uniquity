@@ -1,36 +1,30 @@
-package com.sixbeeps.uniquity;
+package com.sixbeeps.uniquity
 
-import android.content.Context;
-import android.text.Html;
-import android.widget.Button;
-import android.widget.LinearLayout;
+import android.content.Context
+import android.text.Html
+import android.widget.Button
+import android.widget.LinearLayout
+import androidx.core.content.ContextCompat
 
-import androidx.core.content.ContextCompat;
-
-public class UniquityKeyView extends Button {
-    public UniquityKeyView(Context context, UniquityKey key) {
-        super(context);
-
+class UniquityKeyView @JvmOverloads constructor(context: Context, key: UniquityKey? = null) :
+    Button(context) {
+    init {
         // Update the button's appearance
-        setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color));
-        setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background));
-        setLayoutParams(new LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1.0f
-        ));
+        setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color))
+        setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background))
+        layoutParams = LinearLayout.LayoutParams(
+            0,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            1.0f
+        )
 
         // Set the button text if there is key data
         if (key != null) {
-            if (key.getCaption() != null && !key.getCaption().isEmpty()) {
-                setText(Html.fromHtml(key.getDisplayString() + "<br /><small><small><font color=\"gray\">" + key.getCaption() + "</font></small></small>"));
+            text = if (key.caption != null && !key.caption!!.isEmpty()) {
+                Html.fromHtml(key.displayString + "<br /><small><small><font color=\"gray\">" + key.caption + "</font></small></small>")
             } else {
-                setText(key.getDisplayString());
+                key.displayString
             }
         }
-    }
-
-    public UniquityKeyView(Context context) {
-        this(context, null);
     }
 }

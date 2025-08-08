@@ -1,30 +1,30 @@
-package com.sixbeeps.uniquity.data;
+package com.sixbeeps.uniquity.data
 
-import android.content.Context;
-import android.util.Log;
+import android.content.Context
+import android.util.Log
+import androidx.room.Database
+import androidx.room.Room.databaseBuilder
+import androidx.room.RoomDatabase
 
-import androidx.room.Database;
-import androidx.room.Room;
-import androidx.room.RoomDatabase;
+@Database(
+    entities = [UnicodeGroup::class, UnicodeCharacter::class, UnicodeCharacterAlias::class
+    ], version = 1
+)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun unicodeDao(): UnicodeDao
 
-@Database(entities = {
-        UnicodeGroup.class,
-        UnicodeCharacter.class,
-        UnicodeCharacterAlias.class
-}, version = 1)
-public abstract class AppDatabase extends RoomDatabase {
-    public static AppDatabase INSTANCE = null;
-    public abstract UnicodeDao unicodeDao();
+    companion object {
+        var INSTANCE: AppDatabase? = null
+        fun init(context: Context) {
+            if (INSTANCE != null) {
+                Log.w("AppDatabase", "Attempted to re-initialize database, ignoring")
+                return
+            }
 
-    public static void init(Context context) {
-        if (INSTANCE != null) {
-            Log.w("AppDatabase", "Attempted to re-initialize database, ignoring");
-            return;
-        }
-
-        INSTANCE = Room.databaseBuilder(context, AppDatabase.class, "unicode")
+            INSTANCE = databaseBuilder(context, AppDatabase::class.java, "unicode")
                 .allowMainThreadQueries()
                 .createFromAsset("ucd.db")
-                .build();
+                .build()
+        }
     }
 }

@@ -1,14 +1,13 @@
-package com.sixbeeps.uniquity;
+package com.sixbeeps.uniquity
 
 /**
  * A single key on the Uniquity keyboard.
  */
-public class UniquityKey {
-
+class UniquityKey {
     /**
      * Which action the key should take when pressed
      */
-    public enum KeyType {
+    enum class KeyType {
         /**
          * A key that enters text into the text field
          */
@@ -20,80 +19,68 @@ public class UniquityKey {
         DELETE
     }
 
-    KeyType type;
-    String contents;
-    String label;
-    String caption;
-
-    public UniquityKey(String contents) {
-        this.type = KeyType.NORMAL;
-        this.contents = contents;
-    }
-
-    public UniquityKey(String contents, String label) {
-        this.type = KeyType.NORMAL;
-        this.contents = contents;
-        this.label = label;
-    }
-
-    public UniquityKey(String contents, String label, String caption) {
-        this.type = KeyType.NORMAL;
-        this.contents = contents;
-        this.label = label;
-        this.caption = caption;
-    }
-
-    public UniquityKey(KeyType type) {
-        this.type = type;
-        switch (type) {
-            case DELETE:
-                this.label = "⌫";
-                break;
-            default:
-                break;
-        }
-    }
-
     /**
-     * Get the <code>KeyType</code> of this key
+     * Get the `KeyType` of this key
      */
-    public KeyType getType() {
-        return type;
-    }
+    @JvmField
+    var type: KeyType?
 
     /**
      * If this key is a normal key, get the text that should be entered
      */
-    public String getContents() {
-        return contents;
-    }
+    @JvmField
+    var contents: String? = null
 
     /**
      * If this key has a label, get it. This should not be used for rendering the key. Instead,
-     * use <code>getDisplayString()</code>.
-     * @see #getDisplayString()
+     * use `getDisplayString()`.
+     * @see .getDisplayString
      */
-    public String getLabel() {
-        return label;
-    }
-
-    /**
-     * Get the appropriate text to use when rendering this key. Returns <code>label</code> unless
-     * this key is a normal key with no label, in which case it returns <code>contents</code>.
-     */
-    public String getDisplayString() {
-        if (type == KeyType.NORMAL) {
-            if (label != null) return label;
-            return contents;
-        } else {
-            return label;
-        }
-    }
+    var label: String? = null
 
     /**
      * If this key has a caption, get it. For Uniquity, this is the Unicode codepoint.
      */
-    public String getCaption() {
-        return caption;
+    @JvmField
+    var caption: String? = null
+
+    constructor(contents: String?) {
+        this.type = KeyType.NORMAL
+        this.contents = contents
     }
+
+    constructor(contents: String?, label: String?) {
+        this.type = KeyType.NORMAL
+        this.contents = contents
+        this.label = label
+    }
+
+    constructor(contents: String?, label: String?, caption: String?) {
+        this.type = KeyType.NORMAL
+        this.contents = contents
+        this.label = label
+        this.caption = caption
+    }
+
+    constructor(type: KeyType) {
+        this.type = type
+        when (type) {
+            KeyType.DELETE -> this.label = "⌫"
+            else -> {}
+        }
+    }
+
+    val displayString: String?
+        /**
+         * Get the appropriate text to use when rendering this key. Returns `label` unless
+         * this key is a normal key with no label, in which case it returns `contents`.
+         */
+        get() {
+            if (type == KeyType.NORMAL) {
+                if (label != null) return label
+                return contents
+            } else {
+                return label
+            }
+        }
 }
