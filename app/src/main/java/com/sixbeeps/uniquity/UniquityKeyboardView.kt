@@ -70,6 +70,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
     private var currentSelectedGroup: UnicodeGroup? = null
 
     init {
+        AppDatabase.init(context)
         init(context)
     }
 

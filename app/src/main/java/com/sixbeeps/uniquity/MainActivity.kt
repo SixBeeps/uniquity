@@ -25,7 +25,6 @@ import com.sixbeeps.uniquity.ui.theme.UniquityTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppDatabase.init(applicationContext)
 
         enableEdgeToEdge()
         setContent {
