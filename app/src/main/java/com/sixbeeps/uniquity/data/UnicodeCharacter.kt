@@ -10,7 +10,7 @@ class UnicodeCharacter {
     var codepoint: String = ""
 
     @JvmField
-    var name: String = ""
+    var name: String? = null
 
     @JvmField
     var groupName: String = ""

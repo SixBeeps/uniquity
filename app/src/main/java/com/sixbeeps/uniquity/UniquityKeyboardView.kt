@@ -12,6 +12,8 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.sixbeeps.uniquity.data.AppDatabase
 import com.sixbeeps.uniquity.data.UnicodeGroup
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 
 /**
  * The main view for the Uniquity Keyboard
@@ -62,22 +64,16 @@ class UniquityKeyboardView @JvmOverloads constructor(
     var keys: MutableList<UniquityKey> = ArrayList()
     var listener: UniquityKeyboardListener? = null
 
-    private lateinit var tabStripContentLayout: LinearLayout
-    private lateinit var keybed: UniquityKeybedLayout
-    private lateinit var commandStripLayout: LinearLayout
+    private var tabStripContentLayout: LinearLayout
+    private var keybed: UniquityKeybedLayout
+    private var commandStripLayout: LinearLayout
 
-    private val allUnicodeGroups: MutableList<UnicodeGroup> = ArrayList()
+    private var allUnicodeGroups: MutableList<UnicodeGroup>? = null;
     private var currentSelectedGroup: UnicodeGroup? = null
 
     init {
         AppDatabase.init(context)
-        init(context)
-    }
 
-    /**
-     * Initialize the UniquityKeyboardView
-     */
-    private fun init(context: Context) {
         orientation = VERTICAL
 
         val fixedHeightInPx = TypedValue.applyDimension(
@@ -140,12 +136,6 @@ class UniquityKeyboardView @JvmOverloads constructor(
 
         // Load Unicode groups from the database and store them for later
         fetchUnicodeGroups()
-        currentSelectedGroup = if (!allUnicodeGroups.isEmpty()) {
-            // If there are groups, select the first one
-            allUnicodeGroups[0]
-        } else {
-            null
-        }
 
         // Draw all the UI elements
         refreshTabStrip()
@@ -155,11 +145,18 @@ class UniquityKeyboardView @JvmOverloads constructor(
     /**
      * Loads Unicode groups from the database and stores them in `allUnicodeGroups`
      */
-    fun fetchUnicodeGroups() {
-        allUnicodeGroups.clear()
-        val groupsFromDb = AppDatabase.INSTANCE!!.unicodeDao().installedUnicodeGroups
-        if (groupsFromDb != null) {
-            allUnicodeGroups.addAll(groupsFromDb)
+    fun fetchUnicodeGroups() = runBlocking {
+        allUnicodeGroups?.clear()
+        allUnicodeGroups = null;
+        currentSelectedGroup = null;
+        refreshTabStrip()
+        launch {
+            val groups = AppDatabase.INSTANCE?.unicodeDao()?.getInstalledUnicodeGroups()
+            if (groups != null) {
+                allUnicodeGroups = ArrayList()
+                allUnicodeGroups!!.addAll(groups)
+                refreshTabStrip()
+            }
         }
     }
 
@@ -170,8 +167,31 @@ class UniquityKeyboardView @JvmOverloads constructor(
         tabStripContentLayout.removeAllViews()
         val context = getContext()
 
+        // If the groups are still loading, display some loading text
+        if (allUnicodeGroups == null) {
+            val loadingTextView = TextView(context)
+            loadingTextView.setText(R.string.loading)
+            loadingTextView.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.uniquity_button_text_color
+                )
+            )
+            val tvParams = LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            )
+            val paddingPx = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 8f, resources.displayMetrics
+            ).toInt()
+            loadingTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
+            loadingTextView.layoutParams = tvParams
+            tabStripContentLayout.addView(loadingTextView)
+            return
+        }
+
         // If there are no groups, display a message
-        if (allUnicodeGroups.isEmpty()) {
+        if (allUnicodeGroups!!.isEmpty()) {
             val noGroupsTextView = TextView(context)
             noGroupsTextView.setText(R.string.warning_no_group)
             noGroupsTextView.setTextColor(

@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 1,
-    "identityHash": "d77f48c295086e6bd6036336e1cfe96d",
+    "version": 2,
+    "identityHash": "97f03dcdfb957fe79a7c6c2ed3b6729e",
     "entities": [
       {
         "tableName": "UnicodeGroup",
@@ -24,7 +24,7 @@
       },
       {
         "tableName": "UnicodeCharacter",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`codepoint` TEXT NOT NULL, `name` TEXT NOT NULL, `groupName` TEXT NOT NULL, PRIMARY KEY(`codepoint`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`codepoint` TEXT NOT NULL, `name` TEXT, `groupName` TEXT NOT NULL, PRIMARY KEY(`codepoint`))",
         "fields": [
           {
             "fieldPath": "codepoint",
@@ -35,8 +35,7 @@
           {
             "fieldPath": "name",
             "columnName": "name",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "groupName",
@@ -85,7 +84,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd77f48c295086e6bd6036336e1cfe96d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '97f03dcdfb957fe79a7c6c2ed3b6729e')"
     ]
   }
 }

@@ -8,7 +8,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [UnicodeGroup::class, UnicodeCharacter::class, UnicodeCharacterAlias::class
-    ], version = 1
+    ], version = 2
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun unicodeDao(): UnicodeDao
@@ -21,8 +21,9 @@ abstract class AppDatabase : RoomDatabase() {
                 return
             }
 
-            INSTANCE = databaseBuilder(context, AppDatabase::class.java, "unicode")
+            INSTANCE = databaseBuilder<AppDatabase>(context, AppDatabase::class.java, "unicode")
                 .allowMainThreadQueries()
+                .fallbackToDestructiveMigration(true)
                 .createFromAsset("ucd.db")
                 .build()
         }
