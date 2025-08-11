@@ -12,7 +12,9 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.sixbeeps.uniquity.data.AppDatabase
 import com.sixbeeps.uniquity.data.UnicodeGroup
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -62,6 +64,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
     }
 
     var listener: UniquityKeyboardListener? = null
+    private val viewScope = CoroutineScope(Dispatchers.Main + Job())
 
     private var tabStripContentLayout: LinearLayout
     private var keybed: UniquityKeybedLayout
@@ -135,43 +138,44 @@ class UniquityKeyboardView @JvmOverloads constructor(
         addView(commandStripLayout)
 
         // Load Unicode groups from the database and store them for later
-        fetchUnicodeGroups()
+        viewScope.launch {
+            fetchUnicodeGroups()
+            fetchUnicodeCharsInSelectedGroup()
+        }
 
         // Draw all the UI elements
         refreshTabStrip()
-        fetchUnicodeCharsInSelectedGroup()
     }
 
     /**
      * Loads Unicode groups from the database and stores them in `allUnicodeGroups`
      */
-    fun fetchUnicodeGroups() = runBlocking {
+    suspend fun fetchUnicodeGroups() {
         // Clear existing group data
         allUnicodeGroups?.clear()
         allUnicodeGroups = null
         currentSelectedGroup = null
         refreshTabStrip()
 
-        // Launch a coroutine to load Unicode groups from the database
-        launch {
-            val groups = AppDatabase.INSTANCE?.unicodeDao()?.getInstalledUnicodeGroups()
-            if (groups != null) {
-                allUnicodeGroups = ArrayList()
-                allUnicodeGroups!!.addAll(groups)
-                refreshTabStrip()
-            }
+        // Get Unicode groups from the database and store them
+        val groups = AppDatabase.INSTANCE?.unicodeDao()?.getInstalledUnicodeGroups()
+        if (groups != null) {
+            allUnicodeGroups = ArrayList()
+            allUnicodeGroups!!.addAll(groups)
+            currentSelectedGroup = allUnicodeGroups!!.firstOrNull()
+            refreshTabStrip()
         }
     }
 
     /**
      * Updates the main key grid with characters from the currently selected Unicode group.
      */
-    fun fetchUnicodeCharsInSelectedGroup() = runBlocking {
+    suspend fun fetchUnicodeCharsInSelectedGroup() {
         // Clear existing key data
         keys?.clear()
         if (currentSelectedGroup == null) {
             keys = ArrayList()
-            return@runBlocking
+            return
         } else {
             keys = null
         }
@@ -179,31 +183,29 @@ class UniquityKeyboardView @JvmOverloads constructor(
         refreshKeysLayout()
         refreshCommandStrip()
 
-        // Launch a coroutine to load characters from the database
-        launch {
-            val characters = AppDatabase.INSTANCE?.unicodeDao()?.getUnicodeCharacters(currentSelectedGroup!!.name)
-            keys = ArrayList()
-            if (characters != null) {
-                for (character in characters) {
-                    val scalar = character.codepoint.toInt(16)
+        // Load characters from the database
+        val characters = AppDatabase.INSTANCE?.unicodeDao()?.getUnicodeCharacters(currentSelectedGroup!!.name)
+        keys = ArrayList()
+        if (characters != null) {
+            for (character in characters) {
+                val scalar = character.codepoint.toInt(16)
 
-                    // Handle surrogate pairs if necessary
-                    val text: String?
-                    if (scalar > 0xFFFF) {
-                        val high = (scalar - 0x10000) / 0x400 + 0xD800
-                        val low = (scalar - 0x10000) % 0x400 + 0xDC00
-                        text = String(Character.toChars(high)) + String(Character.toChars(low))
-                    } else {
-                        text = String(Character.toChars(scalar))
-                    }
-
-                    val key = UniquityKey(text, text, character.codepoint)
-                    keys!!.add(key)
+                // Handle surrogate pairs if necessary
+                val text: String?
+                if (scalar > 0xFFFF) {
+                    val high = (scalar - 0x10000) / 0x400 + 0xD800
+                    val low = (scalar - 0x10000) % 0x400 + 0xDC00
+                    text = String(Character.toChars(high)) + String(Character.toChars(low))
+                } else {
+                    text = String(Character.toChars(scalar))
                 }
+
+                val key = UniquityKey(text, text, character.codepoint)
+                keys!!.add(key)
             }
-            refreshKeysLayout()
-            refreshCommandStrip()
         }
+        refreshKeysLayout()
+        refreshCommandStrip()
     }
 
     /**
@@ -303,7 +305,6 @@ class UniquityKeyboardView @JvmOverloads constructor(
 
             tabButton.setOnClickListener { v: View? ->
                 currentSelectedGroup = group
-                fetchUnicodeCharsInSelectedGroup()
 
                 // Reset the background color of each tab and highlight the selected one
                 for (button in tabStripContentLayout.touchables) {
@@ -320,6 +321,11 @@ class UniquityKeyboardView @JvmOverloads constructor(
                         R.color.uniquity_button_background
                     )
                 )
+
+                // Update the key grid
+                viewScope.launch {
+                    fetchUnicodeCharsInSelectedGroup()
+                }
             }
             tabStripContentLayout.addView(tabButton)
         }
@@ -479,7 +485,9 @@ class UniquityKeyboardView @JvmOverloads constructor(
     fun setUniquityKeyboardListener(listener: UniquityKeyboardListener?) {
         this.listener = listener
         refreshTabStrip()
-        fetchUnicodeCharsInSelectedGroup()
+        viewScope.launch {
+            fetchUnicodeCharsInSelectedGroup()
+        }
     }
 
     companion object {

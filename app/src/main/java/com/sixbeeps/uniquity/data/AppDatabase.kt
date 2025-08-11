@@ -21,8 +21,7 @@ abstract class AppDatabase : RoomDatabase() {
                 return
             }
 
-            INSTANCE = databaseBuilder<AppDatabase>(context, AppDatabase::class.java, "unicode")
-                .allowMainThreadQueries()
+            INSTANCE = databaseBuilder(context, AppDatabase::class.java, "unicode")
                 .fallbackToDestructiveMigration(true)
                 .createFromAsset("ucd.db")
                 .build()
