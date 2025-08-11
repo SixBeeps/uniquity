@@ -68,7 +68,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
     private var keybed: UniquityKeybedLayout
     private var commandStripLayout: LinearLayout
 
-    private var allUnicodeGroups: MutableList<UnicodeGroup>? = null;
+    private var allUnicodeGroups: MutableList<UnicodeGroup>? = null
     private var currentSelectedGroup: UnicodeGroup? = null
 
     init {
@@ -147,8 +147,8 @@ class UniquityKeyboardView @JvmOverloads constructor(
      */
     fun fetchUnicodeGroups() = runBlocking {
         allUnicodeGroups?.clear()
-        allUnicodeGroups = null;
-        currentSelectedGroup = null;
+        allUnicodeGroups = null
+        currentSelectedGroup = null
         refreshTabStrip()
         launch {
             val groups = AppDatabase.INSTANCE?.unicodeDao()?.getInstalledUnicodeGroups()

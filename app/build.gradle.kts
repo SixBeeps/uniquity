@@ -45,6 +45,7 @@ android {
     }
 }
 
+//noinspection UseTomlInstead
 dependencies {
     val room_version = "2.7.2"
 
