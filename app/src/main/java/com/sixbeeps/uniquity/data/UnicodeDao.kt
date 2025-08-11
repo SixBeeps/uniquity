@@ -9,14 +9,14 @@ interface UnicodeDao {
     suspend fun getInstalledUnicodeGroups(): List<UnicodeGroup>?
 
     @Query("SELECT * FROM UnicodeGroup WHERE name = :name")
-    fun getUnicodeGroup(name: String?): UnicodeGroup?
+    suspend fun getUnicodeGroup(name: String?): UnicodeGroup?
 
     @Query("SELECT * FROM UnicodeCharacter WHERE groupName = :group")
-    fun getUnicodeCharacters(group: String?): List<UnicodeCharacter>?
+    suspend fun getUnicodeCharacters(group: String?): List<UnicodeCharacter>?
 
     @Query("SELECT * FROM UnicodeCharacter WHERE codepoint = :codepoint")
-    fun getUnicodeCharacter(codepoint: String?): UnicodeCharacter?
+    suspend fun getUnicodeCharacter(codepoint: String?): UnicodeCharacter?
 
     @Query("SELECT * FROM UnicodeCharacterAlias WHERE codepoint = :codepoint")
-    fun getUnicodeCharacterAliases(codepoint: String?): List<UnicodeCharacterAlias>?
+    suspend fun getUnicodeCharacterAliases(codepoint: String?): List<UnicodeCharacterAlias>?
 }

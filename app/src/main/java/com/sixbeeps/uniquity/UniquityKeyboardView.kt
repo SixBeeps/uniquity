@@ -61,7 +61,6 @@ class UniquityKeyboardView @JvmOverloads constructor(
         }
     }
 
-    var keys: MutableList<UniquityKey> = ArrayList()
     var listener: UniquityKeyboardListener? = null
 
     private var tabStripContentLayout: LinearLayout
@@ -69,6 +68,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
     private var commandStripLayout: LinearLayout
 
     private var allUnicodeGroups: MutableList<UnicodeGroup>? = null
+    private var keys: MutableList<UniquityKey>? = null
     private var currentSelectedGroup: UnicodeGroup? = null
 
     init {
@@ -139,17 +139,20 @@ class UniquityKeyboardView @JvmOverloads constructor(
 
         // Draw all the UI elements
         refreshTabStrip()
-        updateKeysForSelectedGroup()
+        fetchUnicodeCharsInSelectedGroup()
     }
 
     /**
      * Loads Unicode groups from the database and stores them in `allUnicodeGroups`
      */
     fun fetchUnicodeGroups() = runBlocking {
+        // Clear existing group data
         allUnicodeGroups?.clear()
         allUnicodeGroups = null
         currentSelectedGroup = null
         refreshTabStrip()
+
+        // Launch a coroutine to load Unicode groups from the database
         launch {
             val groups = AppDatabase.INSTANCE?.unicodeDao()?.getInstalledUnicodeGroups()
             if (groups != null) {
@@ -157,6 +160,49 @@ class UniquityKeyboardView @JvmOverloads constructor(
                 allUnicodeGroups!!.addAll(groups)
                 refreshTabStrip()
             }
+        }
+    }
+
+    /**
+     * Updates the main key grid with characters from the currently selected Unicode group.
+     */
+    fun fetchUnicodeCharsInSelectedGroup() = runBlocking {
+        // Clear existing key data
+        keys?.clear()
+        if (currentSelectedGroup == null) {
+            keys = ArrayList()
+            return@runBlocking
+        } else {
+            keys = null
+        }
+
+        refreshKeysLayout()
+        refreshCommandStrip()
+
+        // Launch a coroutine to load characters from the database
+        launch {
+            val characters = AppDatabase.INSTANCE?.unicodeDao()?.getUnicodeCharacters(currentSelectedGroup!!.name)
+            keys = ArrayList()
+            if (characters != null) {
+                for (character in characters) {
+                    val scalar = character.codepoint.toInt(16)
+
+                    // Handle surrogate pairs if necessary
+                    val text: String?
+                    if (scalar > 0xFFFF) {
+                        val high = (scalar - 0x10000) / 0x400 + 0xD800
+                        val low = (scalar - 0x10000) % 0x400 + 0xDC00
+                        text = String(Character.toChars(high)) + String(Character.toChars(low))
+                    } else {
+                        text = String(Character.toChars(scalar))
+                    }
+
+                    val key = UniquityKey(text, text, character.codepoint)
+                    keys!!.add(key)
+                }
+            }
+            refreshKeysLayout()
+            refreshCommandStrip()
         }
     }
 
@@ -257,7 +303,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
 
             tabButton.setOnClickListener { v: View? ->
                 currentSelectedGroup = group
-                updateKeysForSelectedGroup()
+                fetchUnicodeCharsInSelectedGroup()
 
                 // Reset the background color of each tab and highlight the selected one
                 for (button in tabStripContentLayout.touchables) {
@@ -278,44 +324,6 @@ class UniquityKeyboardView @JvmOverloads constructor(
             tabStripContentLayout.addView(tabButton)
         }
     }
-
-    /**
-     * Updates the main key grid with characters from the currently selected Unicode group.
-     */
-    private fun updateKeysForSelectedGroup() {
-        keys.clear()
-        if (currentSelectedGroup != null) {
-            // Get all characters from the selected group
-            val characters = AppDatabase.INSTANCE!!.unicodeDao().getUnicodeCharacters(
-                currentSelectedGroup!!.name
-            )
-
-            // If there are characters, create a key for each of them
-            if (characters != null) {
-                for (character in characters) {
-                    val scalar = character.codepoint.toInt(16)
-
-                    // Handle surrogate pairs if necessary
-                    val text: String?
-                    if (scalar > 0xFFFF) {
-                        val high = (scalar - 0x10000) / 0x400 + 0xD800
-                        val low = (scalar - 0x10000) % 0x400 + 0xDC00
-                        text = String(Character.toChars(high)) + String(Character.toChars(low))
-                    } else {
-                        text = String(Character.toChars(scalar))
-                    }
-
-                    val key = UniquityKey(text, text, character.codepoint)
-                    keys.add(key)
-                }
-            }
-        }
-
-        // Refresh the UI
-        refreshKeysLayout()
-        refreshCommandStrip()
-    }
-
 
     /**
      * Refreshes the command strip
@@ -397,8 +405,34 @@ class UniquityKeyboardView @JvmOverloads constructor(
         var currentRow: LinearLayout? = null
         val KEYS_PER_ROW = 8
 
-        if (keys.isEmpty() && currentSelectedGroup != null) {
-            // Display message if selected group has no characters
+        val tvParams = LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            LayoutParams.WRAP_CONTENT
+        )
+        val paddingPx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, 16f, resources.displayMetrics
+        ).toInt()
+
+        // If the characters are still loading, display some loading text
+        if (keys == null) {
+            val loadingTextView = TextView(context)
+            loadingTextView.setText(R.string.loading)
+            loadingTextView.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.uniquity_button_text_color
+                )
+            )
+            loadingTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
+            loadingTextView.textAlignment = TEXT_ALIGNMENT_CENTER
+            loadingTextView.layoutParams = tvParams
+            keybed.root.addView(loadingTextView)
+            keybed.root.requestLayout()
+            return
+        }
+
+        // If selected group has no characters, display a message
+        if (keys!!.isEmpty() && currentSelectedGroup != null) {
             val noCharsInGroupTextView = TextView(context)
             noCharsInGroupTextView.setText(R.string.warning_no_char_in_group)
             noCharsInGroupTextView.setTextColor(
@@ -407,13 +441,6 @@ class UniquityKeyboardView @JvmOverloads constructor(
                     R.color.uniquity_button_text_color
                 )
             )
-            val tvParams = LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                LayoutParams.WRAP_CONTENT
-            )
-            val paddingPx = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 16f, resources.displayMetrics
-            ).toInt()
             noCharsInGroupTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
             noCharsInGroupTextView.textAlignment = TEXT_ALIGNMENT_CENTER
             noCharsInGroupTextView.layoutParams = tvParams
@@ -423,7 +450,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
         }
 
 
-        for (i in keys.indices) {
+        for (i in keys!!.indices) {
             if (i % KEYS_PER_ROW == 0) {
                 currentRow = LinearLayout(context)
                 currentRow.orientation = HORIZONTAL
@@ -434,7 +461,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
                 keybed.root.addView(currentRow)
             }
 
-            val key = keys[i]
+            val key = keys!![i]
             val button = UniquityKeyView(context, key)
 
             if (this.listener != null) {
@@ -452,7 +479,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
     fun setUniquityKeyboardListener(listener: UniquityKeyboardListener?) {
         this.listener = listener
         refreshTabStrip()
-        updateKeysForSelectedGroup()
+        fetchUnicodeCharsInSelectedGroup()
     }
 
     companion object {
