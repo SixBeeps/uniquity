@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.TypedValue
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.LinearLayout.LayoutParams
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
