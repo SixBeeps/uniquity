@@ -411,46 +411,18 @@ class UniquityKeyboardView @JvmOverloads constructor(
         var currentRow: LinearLayout? = null
         val KEYS_PER_ROW = 8
 
-        val tvParams = LayoutParams(
-            LayoutParams.MATCH_PARENT,
-            LayoutParams.WRAP_CONTENT
-        )
-        val paddingPx = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP, 16f, resources.displayMetrics
-        ).toInt()
-
         // If the characters are still loading, display some loading text
         if (keys == null) {
-            val loadingTextView = TextView(context)
-            loadingTextView.setText(R.string.loading)
-            loadingTextView.setTextColor(
-                ContextCompat.getColor(
-                    context,
-                    R.color.uniquity_button_text_color
-                )
-            )
-            loadingTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
-            loadingTextView.textAlignment = TEXT_ALIGNMENT_CENTER
-            loadingTextView.layoutParams = tvParams
-            keybed.root.addView(loadingTextView)
+            keybed.status = resources.getString(R.string.loading)
+            keybed.showStatus()
             keybed.root.requestLayout()
             return
         }
 
         // If selected group has no characters, display a message
-        if (keys!!.isEmpty() && currentSelectedGroup != null) {
-            val noCharsInGroupTextView = TextView(context)
-            noCharsInGroupTextView.setText(R.string.warning_no_char_in_group)
-            noCharsInGroupTextView.setTextColor(
-                ContextCompat.getColor(
-                    context,
-                    R.color.uniquity_button_text_color
-                )
-            )
-            noCharsInGroupTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
-            noCharsInGroupTextView.textAlignment = TEXT_ALIGNMENT_CENTER
-            noCharsInGroupTextView.layoutParams = tvParams
-            keybed.root.addView(noCharsInGroupTextView)
+        else if (keys!!.isEmpty() && currentSelectedGroup != null) {
+            keybed.status = resources.getString(R.string.warning_no_char_in_group)
+            keybed.showStatus()
             keybed.root.requestLayout()
             return
         }
