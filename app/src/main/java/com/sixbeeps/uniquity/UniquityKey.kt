@@ -16,7 +16,12 @@ class UniquityKey {
         /**
          * A key that deletes the character before the cursor
          */
-        DELETE
+        DELETE,
+
+        /**
+         * A key that either performs a submission, or inserts a newline
+         */
+        ENTER,
     }
 
     /**
@@ -66,6 +71,7 @@ class UniquityKey {
         this.type = type
         when (type) {
             KeyType.DELETE -> this.label = "⌫"
+            KeyType.ENTER -> this.label = "⏎"
             else -> {}
         }
     }

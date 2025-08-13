@@ -39,6 +39,11 @@ class UniquityKeyboardView @JvmOverloads constructor(
          * Called when the backspace/delete key is pressed
          */
         fun onDelete()
+
+        /**
+         * Called when the enter key is pressed
+         */
+        fun onEnter()
     }
 
     /**
@@ -53,6 +58,8 @@ class UniquityKeyboardView @JvmOverloads constructor(
                 val type = key.type
                 if (type == UniquityKey.KeyType.DELETE) {
                     listener.onDelete()
+                } else if (type == UniquityKey.KeyType.ENTER) {
+                    listener.onEnter()
                 } else if (type == UniquityKey.KeyType.NORMAL) {
                     val contents = key.contents
                     if (contents != null && !contents.isEmpty()) {
@@ -400,6 +407,36 @@ class UniquityKeyboardView @JvmOverloads constructor(
             deleteButton.setOnClickListener(UniquityKeyboardClickListener(this.listener, deleteKey))
         }
         commandStripLayout.addView(deleteButton)
+
+        // Add enter key
+        val enterKey = UniquityKey(UniquityKey.KeyType.ENTER)
+        val enterButton = Button(context)
+        enterButton.text = enterKey.displayString
+        enterButton.setTextColor(
+            ContextCompat.getColor(
+                context,
+                R.color.uniquity_button_text_color
+            )
+        )
+
+        enterButton.setBackgroundColor(
+            ContextCompat.getColor(
+                context,
+                R.color.uniquity_button_special_background
+            )
+        )
+
+        val enterParams = LayoutParams(
+            LayoutParams.WRAP_CONTENT,
+            LayoutParams.WRAP_CONTENT
+        )
+        enterParams.setMargins(marginPx, marginPx, marginPx, marginPx)
+        enterButton.layoutParams = enterParams
+
+        if (this.listener != null) {
+            enterButton.setOnClickListener(UniquityKeyboardClickListener(this.listener, enterKey))
+        }
+        commandStripLayout.addView(enterButton)
     }
 
     /**

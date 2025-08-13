@@ -10,6 +10,7 @@
 
     <color name="uniquity_command_strip_background">#37474F</color>
     <color name="uniquity_button_background">#263238</color>
+    <color name="uniquity_button_special_background">#347A7E</color>
     <color name="uniquity_button_text_color">#FFFFFF</color>
     <color name="uniquity_separator_color">#444444</color>
 </resources>
