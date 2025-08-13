@@ -1,6 +1,7 @@
 package com.sixbeeps.uniquity
 
 import android.inputmethodservice.InputMethodService
+import android.os.Vibrator
 import android.view.View
 import android.view.inputmethod.EditorInfo
 
@@ -34,11 +35,15 @@ class UniquityInputMethodService : InputMethodService(), UniquityKeyboardView.Un
         if (ic == null) return
 
         // Check if the enter key should put a newline or submit a go action
-        val imeOptions = currentInputEditorInfo.imeOptions
-        if (imeOptions and EditorInfo.IME_ACTION_GO != 0) {
+        val actionBits = currentInputEditorInfo.imeOptions and EditorInfo.IME_MASK_ACTION
+        if (actionBits and EditorInfo.IME_ACTION_GO != 0) {
             ic.performEditorAction(EditorInfo.IME_ACTION_GO)
+        } else if (actionBits and EditorInfo.IME_ACTION_SEND != 0) {
+            ic.performEditorAction(EditorInfo.IME_ACTION_SEND)
+        } else if (actionBits and EditorInfo.IME_ACTION_SEARCH != 0) {
+            ic.performEditorAction(EditorInfo.IME_ACTION_SEARCH)
         } else {
-            ic.commitText("\n", 1)
+            ic.commitText("", 1)
         }
     }
 }

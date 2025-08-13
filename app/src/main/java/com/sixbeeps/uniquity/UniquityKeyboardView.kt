@@ -1,6 +1,7 @@
 package com.sixbeeps.uniquity
 
 import android.content.Context
+import android.os.Vibrator
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
@@ -54,6 +55,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
         private val key: UniquityKey
     ) : OnClickListener {
         override fun onClick(view: View?) {
+            UniquityKeyboardView.vibrator?.vibrate(20);
             if (listener != null) {
                 val type = key.type
                 if (type == UniquityKey.KeyType.DELETE) {
@@ -149,6 +151,9 @@ class UniquityKeyboardView @JvmOverloads constructor(
             fetchUnicodeGroups()
             fetchUnicodeCharsInSelectedGroup()
         }
+
+        // Initialize vibrator
+        vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
         // Draw all the UI elements
         refreshTabStrip()
@@ -501,5 +506,6 @@ class UniquityKeyboardView @JvmOverloads constructor(
 
     companion object {
         private const val KEYBOARD_HEIGHT_DP = 200
+        var vibrator: Vibrator? = null;
     }
 }
