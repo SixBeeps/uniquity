@@ -47,31 +47,6 @@ class UniquityKeyboardView @JvmOverloads constructor(
         fun onEnter()
     }
 
-    /**
-     * A class to handle incoming click events
-     */
-    private class UniquityKeyboardClickListener(
-        private val listener: UniquityKeyboardListener?,
-        private val key: UniquityKey
-    ) : OnClickListener {
-        override fun onClick(view: View?) {
-            UniquityKeyboardView.vibrator?.vibrate(20);
-            if (listener != null) {
-                val type = key.type
-                if (type == UniquityKey.KeyType.DELETE) {
-                    listener.onDelete()
-                } else if (type == UniquityKey.KeyType.ENTER) {
-                    listener.onEnter()
-                } else if (type == UniquityKey.KeyType.NORMAL) {
-                    val contents = key.contents
-                    if (contents != null && !contents.isEmpty()) {
-                        listener.onKey(key.contents)
-                    }
-                }
-            }
-        }
-    }
-
     var listener: UniquityKeyboardListener? = null
     private val viewScope = CoroutineScope(Dispatchers.Main + Job())
 
@@ -379,9 +354,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
         spaceParams.setMargins(marginPx, marginPx, marginPx, marginPx)
         spaceButton.layoutParams = spaceParams
 
-        if (this.listener != null) {
-            spaceButton.setOnClickListener(UniquityKeyboardClickListener(this.listener, spaceKey))
-        }
+        UniquityListeners.bindAllListeners(spaceButton, this.listener, spaceKey);
         commandStripLayout.addView(spaceButton)
 
         // Add delete key
@@ -403,14 +376,12 @@ class UniquityKeyboardView @JvmOverloads constructor(
 
         val deleteParams = LayoutParams(
             LayoutParams.WRAP_CONTENT,
-            LayoutParams.WRAP_CONTENT
+            LayoutParams.MATCH_PARENT
         )
         deleteParams.setMargins(marginPx, marginPx, marginPx, marginPx)
         deleteButton.layoutParams = deleteParams
 
-        if (this.listener != null) {
-            deleteButton.setOnClickListener(UniquityKeyboardClickListener(this.listener, deleteKey))
-        }
+        UniquityListeners.bindAllListeners(deleteButton, this.listener, deleteKey);
         commandStripLayout.addView(deleteButton)
 
         // Add enter key
@@ -433,14 +404,12 @@ class UniquityKeyboardView @JvmOverloads constructor(
 
         val enterParams = LayoutParams(
             LayoutParams.WRAP_CONTENT,
-            LayoutParams.WRAP_CONTENT
+            LayoutParams.MATCH_PARENT
         )
         enterParams.setMargins(marginPx, marginPx, marginPx, marginPx)
         enterButton.layoutParams = enterParams
 
-        if (this.listener != null) {
-            enterButton.setOnClickListener(UniquityKeyboardClickListener(this.listener, enterKey))
-        }
+        UniquityListeners.bindAllListeners(enterButton, this.listener, enterKey);
         commandStripLayout.addView(enterButton)
     }
 
@@ -469,7 +438,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
             return
         }
 
-
+        // Otherwise, create buttons for each character
         for (i in keys!!.indices) {
             if (i % KEYS_PER_ROW == 0) {
                 currentRow = LinearLayout(context)
@@ -485,7 +454,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
             val button = UniquityKeyView(context, key)
 
             if (this.listener != null) {
-                button.setOnClickListener(UniquityKeyboardClickListener(this.listener, key))
+                button.setOnClickListener(UniquityListeners.ClickListener(this.listener, key))
             }
             currentRow!!.addView(button)
         }
