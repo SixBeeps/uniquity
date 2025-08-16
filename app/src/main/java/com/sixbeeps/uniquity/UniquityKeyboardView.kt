@@ -425,8 +425,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
 
         // If the characters are still loading, display some loading text
         if (keys == null) {
-            keybed.status = resources.getString(R.string.loading)
-            keybed.showStatus()
+            keybed.showLoading()
             keybed.root.requestLayout()
             return
         }

@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.ProgressBar
 import androidx.core.content.ContextCompat
 
 class UniquityKeybedLayout @JvmOverloads constructor(private var context: Context, height: Int = 10) :
@@ -51,22 +52,38 @@ class UniquityKeybedLayout @JvmOverloads constructor(private var context: Contex
             TypedValue.COMPLEX_UNIT_DIP, 16f, resources.displayMetrics
         ).toInt()
 
-        val tvParams = LayoutParams(
+        val layout = LayoutParams(
             LayoutParams.MATCH_PARENT,
             LayoutParams.WRAP_CONTENT
         )
 
-        val loadingTextView = TextView(context)
-        loadingTextView.setText(R.string.loading)
-        loadingTextView.setTextColor(
+        val statusTextView = TextView(context)
+        statusTextView.text = status?: resources.getString(R.string.loading)
+        statusTextView.setTextColor(
             ContextCompat.getColor(
                 context,
                 R.color.uniquity_button_text_color
             )
         )
-        loadingTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
-        loadingTextView.textAlignment = TEXT_ALIGNMENT_CENTER
-        loadingTextView.layoutParams = tvParams
-        root.addView(loadingTextView)
+        statusTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
+        statusTextView.textAlignment = TEXT_ALIGNMENT_CENTER
+        statusTextView.layoutParams = layout
+        root.addView(statusTextView)
+    }
+
+    fun showLoading() {
+        val paddingPx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, 16f, resources.displayMetrics
+        ).toInt()
+
+        val layout = LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            LayoutParams.MATCH_PARENT
+        )
+
+        val throbber = ProgressBar(context)
+        throbber.layoutParams = layout
+        throbber.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
+        root.addView(throbber)
     }
 }
