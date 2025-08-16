@@ -30,3 +30,19 @@ This repository does not include the full Unicode Character Database (UCD) becau
 Alternatively, you may build the app using the basic database. This database contains only a section of the ASCII unicode block. To do this:
 1. Navigate to `app/src/main/java/com/sixbeeps/uniquity/data/AppDatabase.java`.
 2. Locate the Room database builder and modify the `createFromAsset()` invocation to use the `basic.db` file instead of `ucd.db`.
+
+## Installing and Using
+The app bundle comes with two components: the Uniquity keyboard and a simple tester app.
+
+To use the Uniquity keyboard, you need to enable it from your phone settings. Every phone is different, but the general idea is more or less the same. Here's the flow on my Samsung A51:
+- Open the Settings app
+- Navigate to
+	- General management
+	- Keyboard list and default
+- Enable "Uniquity keyboard" and hit OK on all prompts
+- Choose to either
+	- Use Uniquity as the default keyboard
+		- Set "Default keyboard" to Uniquity
+	- Only use Uniquity when you need it
+		- Enable "Keyboard button on navigation bar"
+		- When typing, press the ⌨ icon in the corner and select "Uniquity keyboard"
