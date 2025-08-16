@@ -66,7 +66,7 @@ class UniquityQwertyKeybedLayout @JvmOverloads constructor(private var context: 
             // On the fourth row, add a shift key
             if (root.children.count() == 4) {
                 val shiftKey = Button(context)
-                shiftKey.text = "Shift"
+                shiftKey.setText(R.string.key_shift)
                 shiftKey.layoutParams = LayoutParams(
                     LayoutParams.WRAP_CONTENT,
                     LayoutParams.MATCH_PARENT
@@ -82,7 +82,7 @@ class UniquityQwertyKeybedLayout @JvmOverloads constructor(private var context: 
 
             // Add all row keys to row
             for (letter in row) {
-                val key = UniquityKey(letter);
+                val key = UniquityKey(letter)
                 val keyButton = UniquityKeyView(context, key)
                 keyButton.layoutParams = LayoutParams(
                     0,

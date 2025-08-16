@@ -4,4 +4,5 @@
     <string name="warning_no_group">No groups found.</string>
     <string name="warning_no_char_in_group">Empty group.</string>
     <string name="loading">Loading</string>
+    <string name="key_shift">Shift</string>
 </resources>
