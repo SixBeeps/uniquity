@@ -128,6 +128,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
         }
 
         // Initialize vibrator
+        @Suppress("DEPRECATION")
         vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
         // Draw all the UI elements
@@ -354,7 +355,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
         spaceParams.setMargins(marginPx, marginPx, marginPx, marginPx)
         spaceButton.layoutParams = spaceParams
 
-        UniquityListeners.bindAllListeners(spaceButton, this.listener, spaceKey);
+        UniquityListeners.bindAllListeners(spaceButton, this.listener, spaceKey)
         commandStripLayout.addView(spaceButton)
 
         // Add delete key
@@ -381,7 +382,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
         deleteParams.setMargins(marginPx, marginPx, marginPx, marginPx)
         deleteButton.layoutParams = deleteParams
 
-        UniquityListeners.bindAllListeners(deleteButton, this.listener, deleteKey);
+        UniquityListeners.bindAllListeners(deleteButton, this.listener, deleteKey)
         commandStripLayout.addView(deleteButton)
 
         // Add enter key
@@ -409,7 +410,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
         enterParams.setMargins(marginPx, marginPx, marginPx, marginPx)
         enterButton.layoutParams = enterParams
 
-        UniquityListeners.bindAllListeners(enterButton, this.listener, enterKey);
+        UniquityListeners.bindAllListeners(enterButton, this.listener, enterKey)
         commandStripLayout.addView(enterButton)
     }
 
@@ -420,7 +421,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
         keybed.root.removeAllViews()
         val context = getContext()
         var currentRow: LinearLayout? = null
-        val KEYS_PER_ROW = 8
+        val keysPerRow = 8
 
         // If the characters are still loading, display some loading text
         if (keys == null) {
@@ -440,7 +441,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
 
         // Otherwise, create buttons for each character
         for (i in keys!!.indices) {
-            if (i % KEYS_PER_ROW == 0) {
+            if (i % keysPerRow == 0) {
                 currentRow = LinearLayout(context)
                 currentRow.orientation = HORIZONTAL
                 currentRow.layoutParams = LayoutParams(
@@ -475,6 +476,6 @@ class UniquityKeyboardView @JvmOverloads constructor(
 
     companion object {
         private const val KEYBOARD_HEIGHT_DP = 200
-        var vibrator: Vibrator? = null;
+        var vibrator: Vibrator? = null
     }
 }

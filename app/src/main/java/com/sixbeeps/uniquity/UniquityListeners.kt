@@ -6,6 +6,7 @@ import android.view.MotionEvent
 import android.view.View
 import com.sixbeeps.uniquity.UniquityKeyboardView.UniquityKeyboardListener
 
+@Suppress("DEPRECATION")
 class UniquityListeners {
     /**
      * A class to handle incoming click events
