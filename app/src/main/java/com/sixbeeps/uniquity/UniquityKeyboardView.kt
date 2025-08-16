@@ -3,6 +3,7 @@ package com.sixbeeps.uniquity
 import android.content.Context
 import android.os.Vibrator
 import android.util.AttributeSet
+import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -52,6 +53,8 @@ class UniquityKeyboardView @JvmOverloads constructor(
 
     private var tabStripContentLayout: LinearLayout
     private var keybed: UniquityKeybedLayout
+    private var qwertyKeybed: UniquityQwertyKeybedLayout
+    private var useQwerty: Boolean = false
     private var commandStripLayout: LinearLayout
 
     private var allUnicodeGroups: MutableList<UnicodeGroup>? = null
@@ -84,9 +87,12 @@ class UniquityKeyboardView @JvmOverloads constructor(
         tabStripScrollView.addView(tabStripContentLayout)
         addView(tabStripScrollView)
 
-        // Keybed
+        // Keybeds
         keybed = UniquityKeybedLayout(context, fixedHeightInPx)
+        qwertyKeybed = UniquityQwertyKeybedLayout(context, fixedHeightInPx)
+        qwertyKeybed.visibility = GONE
         addView(keybed)
+        addView(qwertyKeybed)
 
         // Separator
         val separator = View(context)
@@ -330,6 +336,29 @@ class UniquityKeyboardView @JvmOverloads constructor(
             TypedValue.COMPLEX_UNIT_DIP, 1f, resources.displayMetrics
         ).toInt()
 
+        // Add QWERTY toggle button
+        val qwertyButton = Button(context)
+        qwertyButton.text = "⌨"
+        qwertyButton.setTextColor(
+            ContextCompat.getColor(
+                context,
+                R.color.uniquity_button_text_color
+            )
+        )
+        qwertyButton.setOnClickListener { v: View? ->
+            useQwerty = !useQwerty
+            if (useQwerty) {
+                Log.d("qwerty", "qwerty")
+                qwertyKeybed.visibility = VISIBLE
+                keybed.visibility = GONE
+            } else {
+                Log.d("qwerty", "no qwerty")
+                qwertyKeybed.visibility = GONE
+                keybed.visibility = VISIBLE
+            }
+        }
+        commandStripLayout.addView(qwertyButton)
+
         // Add space bar
         val spaceKey = UniquityKey(" ")
         val spaceButton = Button(context)
@@ -467,6 +496,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
      */
     fun setUniquityKeyboardListener(listener: UniquityKeyboardListener?) {
         this.listener = listener
+        qwertyKeybed.bindListeners(listener)
         refreshTabStrip()
         viewScope.launch {
             fetchUnicodeCharsInSelectedGroup()

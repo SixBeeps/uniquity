@@ -6,8 +6,12 @@ import android.widget.Button
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 
-class UniquityKeyView @JvmOverloads constructor(context: Context, key: UniquityKey? = null) :
-    Button(context) {
+class UniquityKeyView @JvmOverloads constructor(context: Context, val key: UniquityKey? = null) : Button(context) {
+    /**
+     * Primary constructor
+     * @param context Application context
+     * @param key Key data
+     */
     init {
         // Update the button's appearance
         setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color))
