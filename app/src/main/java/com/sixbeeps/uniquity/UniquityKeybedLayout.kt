@@ -45,7 +45,7 @@ class UniquityKeybedLayout @JvmOverloads constructor(private var context: Contex
     init {
         orientation = VERTICAL
         setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background))
-        layoutParams = LinearLayout.LayoutParams(
+        layoutParams = LayoutParams(
             LayoutParams.MATCH_PARENT,
             height
         )
@@ -60,7 +60,7 @@ class UniquityKeybedLayout @JvmOverloads constructor(private var context: Contex
         addView(recyclerView)
         
         // Set up status container (initially hidden)
-        root.orientation = LinearLayout.VERTICAL
+        root.orientation = VERTICAL
         root.layoutParams = ViewGroup.LayoutParams(
             LayoutParams.MATCH_PARENT,
             LayoutParams.MATCH_PARENT
