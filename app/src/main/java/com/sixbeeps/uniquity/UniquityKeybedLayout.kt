@@ -4,15 +4,27 @@ import android.content.Context
 import android.util.TypedValue
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.ProgressBar
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 class UniquityKeybedLayout @JvmOverloads constructor(private var context: Context, height: Int = 10) :
-    ScrollView(context) {
+    LinearLayout(context) {
+    
     /**
-     * Container for key rows
+     * RecyclerView for displaying keys
+     */
+    private val recyclerView: RecyclerView = RecyclerView(context)
+    
+    /**
+     * Adapter for the RecyclerView
+     */
+    private val keyAdapter = UniquityKeyAdapter(context)
+    
+    /**
+     * Container for status/loading views
      */
     @JvmField
     var root: LinearLayout = LinearLayout(context)
@@ -31,23 +43,37 @@ class UniquityKeybedLayout @JvmOverloads constructor(private var context: Contex
      * Backwards compatibility constructor, defaults height to 10px
      */
     init {
-        // Set up key container
-        root.orientation = LinearLayout.VERTICAL
-        root.layoutParams = ViewGroup.LayoutParams(
-            LayoutParams.MATCH_PARENT,
-            LayoutParams.WRAP_CONTENT
-        )
-        addView(root)
-
-        // Set the height of the view
+        orientation = VERTICAL
         setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background))
         layoutParams = LinearLayout.LayoutParams(
             LayoutParams.MATCH_PARENT,
             height
         )
+        
+        // Set up RecyclerView
+        recyclerView.layoutManager = LinearLayoutManager(context)
+        recyclerView.adapter = keyAdapter
+        recyclerView.layoutParams = LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            LayoutParams.MATCH_PARENT
+        )
+        addView(recyclerView)
+        
+        // Set up status container (initially hidden)
+        root.orientation = LinearLayout.VERTICAL
+        root.layoutParams = ViewGroup.LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            LayoutParams.MATCH_PARENT
+        )
+        root.visibility = GONE
+        addView(root)
     }
 
     fun showStatus() {
+        recyclerView.visibility = GONE
+        root.visibility = VISIBLE
+        root.removeAllViews()
+        
         val paddingPx = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP, 16f, resources.displayMetrics
         ).toInt()
@@ -72,6 +98,10 @@ class UniquityKeybedLayout @JvmOverloads constructor(private var context: Contex
     }
 
     fun showLoading() {
+        recyclerView.visibility = GONE
+        root.visibility = VISIBLE
+        root.removeAllViews()
+        
         val paddingPx = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP, 16f, resources.displayMetrics
         ).toInt()
@@ -85,5 +115,12 @@ class UniquityKeybedLayout @JvmOverloads constructor(private var context: Contex
         throbber.layoutParams = layout
         throbber.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
         root.addView(throbber)
+    }
+    
+    fun showKeys(keys: List<UniquityKey>, listener: UniquityKeyboardView.UniquityKeyboardListener?) {
+        root.visibility = GONE
+        recyclerView.visibility = VISIBLE
+        keyAdapter.updateKeys(keys)
+        keyAdapter.setListener(listener)
     }
 }

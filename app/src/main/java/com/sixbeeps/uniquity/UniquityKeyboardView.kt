@@ -447,15 +447,9 @@ class UniquityKeyboardView @JvmOverloads constructor(
      * Refreshes the layout of the main character keys.
      */
     fun refreshKeysLayout() {
-        keybed.root.removeAllViews()
-        val context = getContext()
-        var currentRow: LinearLayout? = null
-        val keysPerRow = 8
-
         // If the characters are still loading, display some loading text
         if (keys == null) {
             keybed.showLoading()
-            keybed.root.requestLayout()
             return
         }
 
@@ -463,31 +457,11 @@ class UniquityKeyboardView @JvmOverloads constructor(
         else if (keys!!.isEmpty() && currentSelectedGroup != null) {
             keybed.status = resources.getString(R.string.warning_no_char_in_group)
             keybed.showStatus()
-            keybed.root.requestLayout()
             return
         }
 
-        // Otherwise, create buttons for each character
-        for (i in keys!!.indices) {
-            if (i % keysPerRow == 0) {
-                currentRow = LinearLayout(context)
-                currentRow.orientation = HORIZONTAL
-                currentRow.layoutParams = LayoutParams(
-                    LayoutParams.MATCH_PARENT,
-                    LayoutParams.WRAP_CONTENT
-                )
-                keybed.root.addView(currentRow)
-            }
-
-            val key = keys!![i]
-            val button = UniquityKeyView(context, key)
-
-            if (this.listener != null) {
-                button.setOnClickListener(UniquityListeners.ClickListener(this.listener, key))
-            }
-            currentRow!!.addView(button)
-        }
-        keybed.root.requestLayout()
+        // Otherwise, show keys in RecyclerView
+        keybed.showKeys(keys!!, this.listener)
     }
 
     /**
