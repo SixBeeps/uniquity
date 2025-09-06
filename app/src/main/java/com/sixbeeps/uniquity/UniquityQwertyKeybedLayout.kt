@@ -1,6 +1,8 @@
 package com.sixbeeps.uniquity
 
 import android.content.Context
+import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.LinearLayout.LayoutParams
@@ -8,14 +10,10 @@ import android.widget.ScrollView
 import android.widget.Button
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
+import androidx.core.view.setPadding
 
 class UniquityQwertyKeybedLayout @JvmOverloads constructor(private var context: Context, height: Int = 10) :
-    ScrollView(context) {
-    /**
-     * Container for key rows
-     */
-    @JvmField
-    var root: LinearLayout = LinearLayout(context)
+    LinearLayout(context) {
 
     private var isShiftPressed = false
     private var keyViews: MutableList<UniquityKeyView> = ArrayList()
@@ -29,47 +27,41 @@ class UniquityQwertyKeybedLayout @JvmOverloads constructor(private var context: 
     init {
         // Set the appearance of the view
         setBackgroundColor(ContextCompat.getColor(context, R.color.uniquity_button_background))
-        layoutParams = LinearLayout.LayoutParams(
+        orientation = VERTICAL
+        layoutParams = LayoutParams(
             LayoutParams.MATCH_PARENT,
             height
         )
-
-        // Set up key container
-        root.orientation = LinearLayout.VERTICAL
-        root.layoutParams = ViewGroup.LayoutParams(
-            LayoutParams.MATCH_PARENT,
-            LayoutParams.MATCH_PARENT
-        )
-        addView(root)
 
         refreshKeys()
     }
 
     private fun refreshKeys() {
         // Reset root container
-        root.removeAllViews()
+        removeAllViews()
         keyViews.clear()
 
         // Add all keys to the key container
         val keyLayout = if (isShiftPressed) shiftedKeyLayout else unshiftedKeyLayout
-        for (row in keyLayout) {
+        for ((rowIndex, row) in keyLayout.withIndex()) {
             // Create a row of keys
             val rowLayout = LinearLayout(context)
-            rowLayout.orientation = LinearLayout.HORIZONTAL
+            rowLayout.orientation = HORIZONTAL
             rowLayout.layoutParams = LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT,
-                1f
+                if (rowIndex == 0) 1f else 0f // Anchor the numeric keys to the top
             )
-            root.addView(rowLayout)
+            addView(rowLayout)
 
-            // On the fourth row, add a shift key
-            if (root.children.count() == 4) {
+            // On the fourth row, add a shift key to the left
+            if (rowIndex == 3) {
                 val shiftKey = Button(context)
-                shiftKey.setText(R.string.key_shift)
+                shiftKey.setText("⇧")
                 shiftKey.layoutParams = LayoutParams(
-                    LayoutParams.WRAP_CONTENT,
-                    LayoutParams.MATCH_PARENT
+                    0,
+                    LayoutParams.MATCH_PARENT,
+                    1f
                 )
                 shiftKey.setBackgroundColor(ContextCompat.getColor(context, if (isShiftPressed) R.color.uniquity_button_special_background else R.color.uniquity_command_strip_background))
                 shiftKey.setTextColor(ContextCompat.getColor(context, R.color.uniquity_button_text_color))
@@ -91,6 +83,17 @@ class UniquityQwertyKeybedLayout @JvmOverloads constructor(private var context: 
                 )
                 rowLayout.addView(keyButton)
                 keyViews.add(keyButton)
+            }
+
+            // On the fourth row, add a spacer to the right
+            if (rowIndex == 3) {
+                val spacer = View(context)
+                spacer.layoutParams = LayoutParams(
+                    0,
+                    LayoutParams.MATCH_PARENT,
+                    1f
+                )
+                rowLayout.addView(spacer)
             }
         }
 

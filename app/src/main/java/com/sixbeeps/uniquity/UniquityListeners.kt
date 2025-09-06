@@ -54,6 +54,11 @@ class UniquityListeners {
                             isRepeating = true
                             listener.onDelete()
                             UniquityKeyboardView.vibrator?.vibrate(20)
+
+                            // Fun surprise feature: this handler never gets cancelled when released
+                            // which means spamming the delete key then holding makes text delete
+                            // faster. This might get patched out later, but I kinda love this
+                            // behavior, so it's staying in for now.
                             handler.postDelayed(repeatDeleteRunnable, 500)
                             return true
                         }
