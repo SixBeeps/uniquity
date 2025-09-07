@@ -7,8 +7,12 @@ import androidx.room.Room.databaseBuilder
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [UnicodeGroup::class, UnicodeCharacter::class, UnicodeCharacterAlias::class
-    ], version = 2
+    entities = [
+        UnicodeGroup::class,
+        UnicodeCharacter::class,
+        UnicodeCharacterAlias::class,
+        Favorite::class
+    ], version = 3
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun unicodeDao(): UnicodeDao

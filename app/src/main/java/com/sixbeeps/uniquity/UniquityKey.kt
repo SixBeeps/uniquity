@@ -89,4 +89,20 @@ class UniquityKey {
                 return label
             }
         }
+
+    /**
+     * Get the hex codepoint for this key's character content.
+     */
+    fun getHexCodepoint(): String? {
+        if (type != KeyType.NORMAL || contents.isNullOrEmpty()) {
+            return null
+        }
+        
+        return try {
+            val codepoint = contents!!.codePointAt(0)
+            String.format("%04X", codepoint)
+        } catch (_: Exception) {
+            null
+        }
+    }
 }

@@ -1,7 +1,6 @@
 package com.sixbeeps.uniquity
 
 import android.inputmethodservice.InputMethodService
-import android.os.Vibrator
 import android.view.View
 import android.view.inputmethod.EditorInfo
 
@@ -10,10 +9,12 @@ import android.view.inputmethod.EditorInfo
  * text in the input field.
  */
 class UniquityInputMethodService : InputMethodService(), UniquityKeyboardView.UniquityKeyboardListener {
+    private var keyboardView: UniquityKeyboardView? = null
+    
     override fun onCreateInputView(): View {
-        val kv = UniquityKeyboardView(this)
-        kv.setUniquityKeyboardListener(this)
-        return kv
+        keyboardView = UniquityKeyboardView(this)
+        keyboardView?.setUniquityKeyboardListener(this)
+        return keyboardView!!
     }
 
     override fun onKey(contents: String?) {
@@ -45,5 +46,10 @@ class UniquityInputMethodService : InputMethodService(), UniquityKeyboardView.Un
         } else {
             ic.commitText("", 1)
         }
+    }
+
+    override fun onLongPress(codepoint: String?) {
+        // Delegate to the keyboard view to handle adding to favorites
+        keyboardView?.addToFavorites(codepoint)
     }
 }

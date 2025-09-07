@@ -20,13 +20,12 @@ interface UnicodeDao {
     @Query("SELECT * FROM UnicodeCharacterAlias WHERE codepoint = :codepoint")
     suspend fun getUnicodeCharacterAliases(codepoint: String?): List<UnicodeCharacterAlias>?
 
-    @Query("""
-        SELECT DISTINCT c.* FROM UnicodeCharacter c 
-        LEFT JOIN UnicodeCharacterAlias a ON c.codepoint = a.codepoint 
-        WHERE c.name LIKE '%' || :searchQuery || '%' 
-        OR a.alias LIKE '%' || :searchQuery || '%'
-        ORDER BY c.codepoint
-        LIMIT :limit
-    """)
-    suspend fun searchUnicodeCharacters(searchQuery: String, limit: Int = 100): List<UnicodeCharacter>?
+    @Query("SELECT * FROM Favorite ORDER BY id ASC")
+    suspend fun getFavorites(): List<Favorite>?
+
+    @Query("INSERT OR IGNORE INTO Favorite (codepoint) VALUES (:codepoint)")
+    suspend fun addToFavorites(codepoint: String)
+
+    @Query("SELECT COUNT(*) FROM Favorite WHERE codepoint = :codepoint")
+    suspend fun isFavorite(codepoint: String): Int
 }

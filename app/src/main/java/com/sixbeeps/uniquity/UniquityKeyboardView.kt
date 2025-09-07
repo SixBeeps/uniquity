@@ -46,6 +46,14 @@ class UniquityKeyboardView @JvmOverloads constructor(
          * Called when the enter key is pressed
          */
         fun onEnter()
+
+        /**
+         * Called when a key is long-pressed to add to favorites
+         * @param codepoint The codepoint of the character to add to favorites
+         */
+        fun onLongPress(codepoint: String?) {
+            // Default implementation - can be overridden
+        }
     }
 
     var listener: UniquityKeyboardListener? = null
@@ -54,13 +62,12 @@ class UniquityKeyboardView @JvmOverloads constructor(
     private var tabStripContentLayout: LinearLayout
     private var keybed: UniquityKeybedLayout
     private var qwertyKeybed: UniquityQwertyKeybedLayout
-    private var searchTabView: UniquitySearchView
     private var favoritesTabView: UniquityFavoritesView
     private var useQwerty: Boolean = false
     private var commandStripLayout: LinearLayout
     
     private enum class ActiveView {
-        KEYBED, SEARCH, FAVORITES
+        KEYBED, FAVORITES
     }
     private var currentActiveView = ActiveView.KEYBED
 
@@ -97,19 +104,15 @@ class UniquityKeyboardView @JvmOverloads constructor(
         // Keybeds and tab views
         keybed = UniquityKeybedLayout(context, fixedHeightInPx)
         qwertyKeybed = UniquityQwertyKeybedLayout(context, fixedHeightInPx)
-        searchTabView = UniquitySearchView(context)
         favoritesTabView = UniquityFavoritesView(context)
         
         qwertyKeybed.visibility = GONE
-        searchTabView.visibility = GONE
         favoritesTabView.visibility = GONE
         
-        searchTabView.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, fixedHeightInPx)
         favoritesTabView.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, fixedHeightInPx)
         
         addView(keybed)
         addView(qwertyKeybed)
-        addView(searchTabView)
         addView(favoritesTabView)
 
         // Separator
@@ -236,39 +239,6 @@ class UniquityKeyboardView @JvmOverloads constructor(
         val regularPaddingPx = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP, 8f, resources.displayMetrics
         ).toInt()
-
-        // Add search tab
-        val searchTabButton = Button(context)
-        searchTabButton.text = "🔍"
-        searchTabButton.setTextColor(
-            ContextCompat.getColor(
-                context,
-                R.color.uniquity_button_text_color
-            )
-        )
-        searchTabButton.setBackgroundColor(
-            ContextCompat.getColor(
-                context,
-                R.color.uniquity_command_strip_background
-            )
-        )
-        searchTabButton.textSize = 14f
-        searchTabButton.minWidth = 0
-        searchTabButton.minimumWidth = 0
-        
-        val searchTabParams = LayoutParams(
-            LayoutParams.WRAP_CONTENT,
-            LayoutParams.MATCH_PARENT
-        )
-        searchTabParams.setMargins(marginPx, 0, marginPx, 0)
-        searchTabButton.layoutParams = searchTabParams
-        searchTabButton.setPadding(regularPaddingPx, smallPaddingPx, regularPaddingPx, smallPaddingPx)
-        
-        searchTabButton.setOnClickListener {
-            switchToView(ActiveView.SEARCH)
-            updateTabButtonStates()
-        }
-        tabStripContentLayout.addView(searchTabButton)
 
         // Add favorites tab
         val favoritesTabButton = Button(context)
@@ -561,6 +531,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
     fun setUniquityKeyboardListener(listener: UniquityKeyboardListener?) {
         this.listener = listener
         qwertyKeybed.bindListeners(listener)
+        favoritesTabView.setKeyboardListener(listener)
         refreshTabStrip()
         viewScope.launch {
             fetchUnicodeCharsInSelectedGroup()
@@ -568,7 +539,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
     }
 
     /**
-     * Switches between different views (keybed, search, favorites)
+     * Switches between different views (keybed, favorites)
      */
     private fun switchToView(view: ActiveView) {
         currentActiveView = view
@@ -577,20 +548,14 @@ class UniquityKeyboardView @JvmOverloads constructor(
             ActiveView.KEYBED -> {
                 keybed.visibility = if (useQwerty) GONE else VISIBLE
                 qwertyKeybed.visibility = if (useQwerty) VISIBLE else GONE
-                searchTabView.visibility = GONE
-                favoritesTabView.visibility = GONE
-            }
-            ActiveView.SEARCH -> {
-                keybed.visibility = GONE
-                qwertyKeybed.visibility = GONE
-                searchTabView.visibility = VISIBLE
                 favoritesTabView.visibility = GONE
             }
             ActiveView.FAVORITES -> {
                 keybed.visibility = GONE
                 qwertyKeybed.visibility = GONE
-                searchTabView.visibility = GONE
                 favoritesTabView.visibility = VISIBLE
+                // Refresh favorites whenever the view opens
+                favoritesTabView.refreshFavorites()
             }
         }
     }
@@ -603,9 +568,8 @@ class UniquityKeyboardView @JvmOverloads constructor(
             val child = tabStripContentLayout.getChildAt(i)
             if (child is Button) {
                 val isActive = when {
-                    i == 0 && currentActiveView == ActiveView.SEARCH -> true
-                    i == 1 && currentActiveView == ActiveView.FAVORITES -> true
-                    i >= 2 && currentActiveView == ActiveView.KEYBED -> {
+                    i == 0 && currentActiveView == ActiveView.FAVORITES -> true
+                    i >= 1 && currentActiveView == ActiveView.KEYBED -> {
                         // Check if this is the active Unicode group tab
                         child.text.toString().replace(" ", "_") == currentSelectedGroup?.name
                     }
@@ -619,6 +583,33 @@ class UniquityKeyboardView @JvmOverloads constructor(
                         else R.color.uniquity_command_strip_background
                     )
                 )
+            }
+        }
+    }
+
+    /**
+     * Adds a character to favorites when long-pressed
+     */
+    fun addToFavorites(codepoint: String?) {
+        if (codepoint != null) {
+            viewScope.launch {
+                try {
+                    // Check if already favorited to avoid duplicates
+                    val isAlreadyFavorite = AppDatabase.INSTANCE?.unicodeDao()?.isFavorite(codepoint) ?: 0
+                    if (isAlreadyFavorite == 0) {
+                        AppDatabase.INSTANCE?.unicodeDao()?.addToFavorites(codepoint)
+                        
+                        // Refresh favorites view if it's currently active
+                        if (currentActiveView == ActiveView.FAVORITES) {
+                            favoritesTabView.refreshFavorites()
+                        }
+                        
+                        // Optional: Show some feedback that it was added
+                        // For now, the vibration from the long press provides feedback
+                    }
+                } catch (e: Exception) {
+                    Log.d("UniquityKeyboard", "Error adding to favorites: ${e.message}")
+                }
             }
         }
     }

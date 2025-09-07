@@ -16,25 +16,44 @@ class UniquityListeners {
         val key: UniquityKey
     ) : View.OnClickListener {
         override fun onClick(view: View?) {
-            if (listener != null) {
-                UniquityKeyboardView.vibrator?.vibrate(20)
-                val type = key.type
-                if (type == UniquityKey.KeyType.DELETE) {
-                    listener.onDelete()
-                } else if (type == UniquityKey.KeyType.ENTER) {
-                    listener.onEnter()
-                } else if (type == UniquityKey.KeyType.NORMAL) {
-                    val contents = key.contents
-                    if (contents != null && !contents.isEmpty()) {
-                        listener.onKey(key.contents)
-                    }
+            if (listener == null) return
+            UniquityKeyboardView.vibrator?.vibrate(20)
+            if (key.type == UniquityKey.KeyType.DELETE) {
+                listener.onDelete()
+            } else if (key.type == UniquityKey.KeyType.ENTER) {
+                listener.onEnter()
+            } else if (key.type == UniquityKey.KeyType.NORMAL) {
+                val contents = key.contents
+                if (contents != null && !contents.isEmpty()) {
+                    listener.onKey(contents)
                 }
             }
         }
     }
 
     /**
-     * A class to handle incoming touch events and handles logic for held keys
+     * A class to handle incoming long-press events
+     */
+    class LongClickListener(
+        val listener: UniquityKeyboardListener?,
+        val key: UniquityKey
+    ) : View.OnLongClickListener {
+        override fun onLongClick(v: View?): Boolean {
+            if (listener == null) return false
+            UniquityKeyboardView.vibrator?.vibrate(20)
+            if (key.type == UniquityKey.KeyType.NORMAL) {
+                // Add key to favorites
+                listener.onLongPress(key.getHexCodepoint())
+            }
+            return true
+        }
+    }
+
+    /**
+     * A class to handle incoming touch events
+     * The DELETE key hold logic is implemented here instead of LongClickListener because the
+     * LongClickListener does not provide an event for when the key is released, which is needed
+     * to cancel the repeating runnable.
      */
     class TouchListener(
         val listener: UniquityKeyboardListener?,
@@ -45,30 +64,26 @@ class UniquityListeners {
         private var isRepeating = false
 
         override fun onTouch(view: View?, event: MotionEvent): Boolean {
-            if (listener != null) {
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        touched = true
+            if (listener == null) return false
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    touched = true
 
-                        if (key.type == UniquityKey.KeyType.DELETE) {
-                            isRepeating = true
-                            listener.onDelete()
-                            UniquityKeyboardView.vibrator?.vibrate(20)
-
-                            // Fun surprise feature: this handler never gets cancelled when released
-                            // which means spamming the delete key then holding makes text delete
-                            // faster. This might get patched out later, but I kinda love this
-                            // behavior, so it's staying in for now.
-                            handler.postDelayed(repeatDeleteRunnable, 500)
-                            return true
-                        }
-                    }
-
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        touched = false
+                    if (key.type == UniquityKey.KeyType.DELETE) {
+                        isRepeating = true
+                        handler.postDelayed(repeatDeleteRunnable, 500)
+                        view?.performClick()
+                        return true
                     }
                 }
+
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    touched = false
+                    isRepeating = false
+                    handler.removeCallbacks(repeatDeleteRunnable)
+                }
             }
+
             return false
         }
 
@@ -92,6 +107,7 @@ class UniquityListeners {
         fun bindAllListeners(view: View?, listener: UniquityKeyboardListener?, key: UniquityKey) {
             if (view != null) {
                 view.setOnClickListener(ClickListener(listener, key))
+                view.setOnLongClickListener(LongClickListener(listener, key))
                 view.setOnTouchListener(TouchListener(listener, key))
             }
         }
