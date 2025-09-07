@@ -54,8 +54,15 @@ class UniquityKeyboardView @JvmOverloads constructor(
     private var tabStripContentLayout: LinearLayout
     private var keybed: UniquityKeybedLayout
     private var qwertyKeybed: UniquityQwertyKeybedLayout
+    private var searchTabView: UniquitySearchView
+    private var favoritesTabView: UniquityFavoritesView
     private var useQwerty: Boolean = false
     private var commandStripLayout: LinearLayout
+    
+    private enum class ActiveView {
+        KEYBED, SEARCH, FAVORITES
+    }
+    private var currentActiveView = ActiveView.KEYBED
 
     private var allUnicodeGroups: MutableList<UnicodeGroup>? = null
     private var keys: MutableList<UniquityKey>? = null
@@ -87,12 +94,23 @@ class UniquityKeyboardView @JvmOverloads constructor(
         tabStripScrollView.addView(tabStripContentLayout)
         addView(tabStripScrollView)
 
-        // Keybeds
+        // Keybeds and tab views
         keybed = UniquityKeybedLayout(context, fixedHeightInPx)
         qwertyKeybed = UniquityQwertyKeybedLayout(context, fixedHeightInPx)
+        searchTabView = UniquitySearchView(context)
+        favoritesTabView = UniquityFavoritesView(context)
+        
         qwertyKeybed.visibility = GONE
+        searchTabView.visibility = GONE
+        favoritesTabView.visibility = GONE
+        
+        searchTabView.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, fixedHeightInPx)
+        favoritesTabView.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, fixedHeightInPx)
+        
         addView(keybed)
         addView(qwertyKeybed)
+        addView(searchTabView)
+        addView(favoritesTabView)
 
         // Separator
         val separator = View(context)
@@ -209,6 +227,82 @@ class UniquityKeyboardView @JvmOverloads constructor(
         tabStripContentLayout.removeAllViews()
         val context = getContext()
 
+        val marginPx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, 2f, resources.displayMetrics
+        ).toInt()
+        val smallPaddingPx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, 6f, resources.displayMetrics
+        ).toInt()
+        val regularPaddingPx = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, 8f, resources.displayMetrics
+        ).toInt()
+
+        // Add search tab
+        val searchTabButton = Button(context)
+        searchTabButton.text = "🔍"
+        searchTabButton.setTextColor(
+            ContextCompat.getColor(
+                context,
+                R.color.uniquity_button_text_color
+            )
+        )
+        searchTabButton.setBackgroundColor(
+            ContextCompat.getColor(
+                context,
+                R.color.uniquity_command_strip_background
+            )
+        )
+        searchTabButton.textSize = 14f
+        searchTabButton.minWidth = 0
+        searchTabButton.minimumWidth = 0
+        
+        val searchTabParams = LayoutParams(
+            LayoutParams.WRAP_CONTENT,
+            LayoutParams.MATCH_PARENT
+        )
+        searchTabParams.setMargins(marginPx, 0, marginPx, 0)
+        searchTabButton.layoutParams = searchTabParams
+        searchTabButton.setPadding(regularPaddingPx, smallPaddingPx, regularPaddingPx, smallPaddingPx)
+        
+        searchTabButton.setOnClickListener {
+            switchToView(ActiveView.SEARCH)
+            updateTabButtonStates()
+        }
+        tabStripContentLayout.addView(searchTabButton)
+
+        // Add favorites tab
+        val favoritesTabButton = Button(context)
+        favoritesTabButton.text = "⭐"
+        favoritesTabButton.setTextColor(
+            ContextCompat.getColor(
+                context,
+                R.color.uniquity_button_text_color
+            )
+        )
+        favoritesTabButton.setBackgroundColor(
+            ContextCompat.getColor(
+                context,
+                R.color.uniquity_command_strip_background
+            )
+        )
+        favoritesTabButton.textSize = 14f
+        favoritesTabButton.minWidth = 0
+        favoritesTabButton.minimumWidth = 0
+        
+        val favoritesTabParams = LayoutParams(
+            LayoutParams.WRAP_CONTENT,
+            LayoutParams.MATCH_PARENT
+        )
+        favoritesTabParams.setMargins(marginPx, 0, marginPx, 0)
+        favoritesTabButton.layoutParams = favoritesTabParams
+        favoritesTabButton.setPadding(regularPaddingPx, smallPaddingPx, regularPaddingPx, smallPaddingPx)
+        
+        favoritesTabButton.setOnClickListener {
+            switchToView(ActiveView.FAVORITES)
+            updateTabButtonStates()
+        }
+        tabStripContentLayout.addView(favoritesTabButton)
+
         // If the groups are still loading, display some loading text
         if (allUnicodeGroups == null) {
             val loadingTextView = TextView(context)
@@ -223,10 +317,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
                 LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT
             )
-            val paddingPx = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 8f, resources.displayMetrics
-            ).toInt()
-            loadingTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
+            loadingTextView.setPadding(regularPaddingPx, regularPaddingPx, regularPaddingPx, regularPaddingPx)
             loadingTextView.layoutParams = tvParams
             tabStripContentLayout.addView(loadingTextView)
             return
@@ -246,10 +337,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
                 LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT
             )
-            val paddingPx = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 8f, resources.displayMetrics
-            ).toInt()
-            noGroupsTextView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
+            noGroupsTextView.setPadding(regularPaddingPx, regularPaddingPx, regularPaddingPx, regularPaddingPx)
             noGroupsTextView.layoutParams = tvParams
             tabStripContentLayout.addView(noGroupsTextView)
             return
@@ -317,6 +405,8 @@ class UniquityKeyboardView @JvmOverloads constructor(
                 )
 
                 // Update the key grid
+                switchToView(ActiveView.KEYBED)
+                updateTabButtonStates()
                 viewScope.launch {
                     fetchUnicodeCharsInSelectedGroup()
                 }
@@ -474,6 +564,62 @@ class UniquityKeyboardView @JvmOverloads constructor(
         refreshTabStrip()
         viewScope.launch {
             fetchUnicodeCharsInSelectedGroup()
+        }
+    }
+
+    /**
+     * Switches between different views (keybed, search, favorites)
+     */
+    private fun switchToView(view: ActiveView) {
+        currentActiveView = view
+        
+        when (view) {
+            ActiveView.KEYBED -> {
+                keybed.visibility = if (useQwerty) GONE else VISIBLE
+                qwertyKeybed.visibility = if (useQwerty) VISIBLE else GONE
+                searchTabView.visibility = GONE
+                favoritesTabView.visibility = GONE
+            }
+            ActiveView.SEARCH -> {
+                keybed.visibility = GONE
+                qwertyKeybed.visibility = GONE
+                searchTabView.visibility = VISIBLE
+                favoritesTabView.visibility = GONE
+            }
+            ActiveView.FAVORITES -> {
+                keybed.visibility = GONE
+                qwertyKeybed.visibility = GONE
+                searchTabView.visibility = GONE
+                favoritesTabView.visibility = VISIBLE
+            }
+        }
+    }
+    
+    /**
+     * Updates the visual state of tab buttons to reflect the current active view
+     */
+    private fun updateTabButtonStates() {
+        for (i in 0 until tabStripContentLayout.childCount) {
+            val child = tabStripContentLayout.getChildAt(i)
+            if (child is Button) {
+                val isActive = when {
+                    i == 0 && currentActiveView == ActiveView.SEARCH -> true
+                    i == 1 && currentActiveView == ActiveView.FAVORITES -> true
+                    i >= 2 && currentActiveView == ActiveView.KEYBED -> {
+                        // Check if this is the active Unicode group tab
+                        child.text.toString().replace(" ", "_") == currentSelectedGroup?.name
+                    }
+                    else -> false
+                }
+                
+                child.setBackgroundColor(
+                    ContextCompat.getColor(
+                        context,
+                        if (isActive) R.color.uniquity_button_background
+                        else R.color.uniquity_command_strip_background
+                    )
+                )
+            }
         }
     }
 

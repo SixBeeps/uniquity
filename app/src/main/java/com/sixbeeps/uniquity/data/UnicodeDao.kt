@@ -19,4 +19,14 @@ interface UnicodeDao {
 
     @Query("SELECT * FROM UnicodeCharacterAlias WHERE codepoint = :codepoint")
     suspend fun getUnicodeCharacterAliases(codepoint: String?): List<UnicodeCharacterAlias>?
+
+    @Query("""
+        SELECT DISTINCT c.* FROM UnicodeCharacter c 
+        LEFT JOIN UnicodeCharacterAlias a ON c.codepoint = a.codepoint 
+        WHERE c.name LIKE '%' || :searchQuery || '%' 
+        OR a.alias LIKE '%' || :searchQuery || '%'
+        ORDER BY c.codepoint
+        LIMIT :limit
+    """)
+    suspend fun searchUnicodeCharacters(searchQuery: String, limit: Int = 100): List<UnicodeCharacter>?
 }
