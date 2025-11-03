@@ -51,11 +51,13 @@ class UniquityKeyboardView @JvmOverloads constructor(
          * Called when a key is long-pressed to add to favorites
          * @param codepoint The codepoint of the character to add to favorites
          */
-        fun onLongPress(codepoint: String?) {
-            // Default implementation - can be overridden
-        }
+        fun onLongPress(codepoint: String?) {}
     }
 
+    enum class ActiveView {
+        KEYBED, FAVORITES
+    }
+    var currentActiveView = ActiveView.KEYBED; private set
     var listener: UniquityKeyboardListener? = null
     private val viewScope = CoroutineScope(Dispatchers.Main + Job())
 
@@ -65,11 +67,6 @@ class UniquityKeyboardView @JvmOverloads constructor(
     private var favoritesTabView: UniquityFavoritesView
     private var useQwerty: Boolean = false
     private var commandStripLayout: LinearLayout
-    
-    private enum class ActiveView {
-        KEYBED, FAVORITES
-    }
-    private var currentActiveView = ActiveView.KEYBED
 
     private var allUnicodeGroups: MutableList<UnicodeGroup>? = null
     private var keys: MutableList<UniquityKey>? = null
@@ -588,7 +585,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
     }
 
     /**
-     * Adds a character to favorites when long-pressed
+     * Adds a character to favorites
      */
     fun addToFavorites(codepoint: String?) {
         if (codepoint != null) {
@@ -603,9 +600,26 @@ class UniquityKeyboardView @JvmOverloads constructor(
                         if (currentActiveView == ActiveView.FAVORITES) {
                             favoritesTabView.refreshFavorites()
                         }
-                        
-                        // Optional: Show some feedback that it was added
-                        // For now, the vibration from the long press provides feedback
+                    }
+                } catch (e: Exception) {
+                    Log.d("UniquityKeyboard", "Error adding to favorites: ${e.message}")
+                }
+            }
+        }
+    }
+
+    /**
+     * Removes a character from favorites
+     */
+    fun removeFromFavorites(codepoint: String?) {
+        if (codepoint != null) {
+            viewScope.launch {
+                try {
+                    AppDatabase.INSTANCE?.unicodeDao()?.removeFromFavorites(codepoint)
+
+                    // Refresh favorites view if it's currently active
+                    if (currentActiveView == ActiveView.FAVORITES) {
+                        favoritesTabView.refreshFavorites()
                     }
                 } catch (e: Exception) {
                     Log.d("UniquityKeyboard", "Error adding to favorites: ${e.message}")

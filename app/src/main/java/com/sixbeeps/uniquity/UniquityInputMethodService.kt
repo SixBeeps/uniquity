@@ -49,7 +49,11 @@ class UniquityInputMethodService : InputMethodService(), UniquityKeyboardView.Un
     }
 
     override fun onLongPress(codepoint: String?) {
-        // Delegate to the keyboard view to handle adding to favorites
-        keyboardView?.addToFavorites(codepoint)
+        // Toggle favorite depending on current page
+        if (keyboardView?.currentActiveView == UniquityKeyboardView.ActiveView.FAVORITES) {
+            keyboardView?.removeFromFavorites(codepoint)
+        } else {
+            keyboardView?.addToFavorites(codepoint)
+        }
     }
 }
