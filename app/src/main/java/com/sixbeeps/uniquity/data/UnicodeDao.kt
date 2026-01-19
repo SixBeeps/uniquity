@@ -27,6 +27,13 @@ interface UnicodeDao {
     @Query("SELECT * FROM UnicodeCharacterAlias WHERE codepoint = :codepoint")
     fun getUnicodeCharacterAliasesSync(codepoint: String?): Cursor
 
+    // TODO - Use Fts4 to search for characters instead
+    @Query("SELECT * FROM UnicodeCharacter WHERE name LIKE :name ORDER BY name LIMIT 250")
+    suspend fun searchUnicodeCharacters(name: String?): List<UnicodeCharacter>?
+
+    @Query("SELECT * FROM UnicodeCharacter WHERE LOWER(name) LIKE LOWER(\'%\' || :name || \'%\') ORDER BY name LIMIT 250")
+    fun searchUnicodeCharactersSync(name: String?): Cursor
+
     @Query("SELECT * FROM Favorite ORDER BY id ASC")
     suspend fun getFavorites(): List<Favorite>?
 

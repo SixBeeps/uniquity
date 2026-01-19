@@ -16,13 +16,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
@@ -66,7 +69,8 @@ class MainActivity : ComponentActivity() {
         val icon: ImageVector
     ) {
         TEST("Tester", Icons.Default.Home),
-        FAVORITES("Favorites", Icons.Default.Star)
+        FAVORITES("Favorites", Icons.Default.Star),
+        SEARCH("Search", Icons.Default.Search),
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,7 +87,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun MainAppLayout() {
         val navController = rememberNavController()
-        val startPage = Page.TEST
+        val startPage = Page.SEARCH
         var currentPage by rememberSaveable { mutableIntStateOf(startPage.ordinal) }
 
         Scaffold(
@@ -106,7 +110,9 @@ class MainActivity : ComponentActivity() {
                 }
             }
         ) { innerPadding ->
-            AppNavHost(navController, startPage, Modifier.padding(innerPadding).fillMaxSize())
+            AppNavHost(navController, startPage, Modifier
+                .padding(innerPadding)
+                .fillMaxSize())
         }
     }
 
@@ -131,6 +137,15 @@ class MainActivity : ComponentActivity() {
 
                             val viewModel: FavoritesViewModel = viewModel (factory = viewModelFactory)
                             FavoritesPageLayout(Modifier.fillMaxHeight(), viewModel)
+                        }
+                        Page.SEARCH -> {
+                            if (viewModelFactory == null) {
+                                println("ViewModelFactory is null, are you running on a real device?")
+                                return@composable
+                            }
+
+                            val viewModel: SearchViewModel = viewModel (factory = viewModelFactory)
+                            SearchPageLayout(Modifier.fillMaxHeight(), viewModel)
                         }
                     }
                 }
@@ -176,7 +191,9 @@ class MainActivity : ComponentActivity() {
         }
 
         LazyColumn (
-            modifier.fillMaxSize().padding(5.dp, 0f.dp),
+            modifier
+                .fillMaxSize()
+                .padding(5.dp, 0f.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp),
             horizontalAlignment = Alignment.Companion.CenterHorizontally,
             contentPadding = PaddingValues(0.dp, 15.dp, 0.dp, 15.dp)
@@ -184,7 +201,10 @@ class MainActivity : ComponentActivity() {
             if (favorites.isEmpty()) {
                 item {
                     Column(
-                        Modifier.fillMaxWidth().wrapContentHeight().padding(5.dp, 15.dp),
+                        Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(5.dp, 15.dp),
 
                         verticalArrangement = Arrangement.spacedBy(15.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -205,18 +225,25 @@ class MainActivity : ComponentActivity() {
             } else {
                 items(favorites.size) { index ->
                     Card (
-                        Modifier.fillMaxWidth().wrapContentHeight(),
+                        Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(),
                     ) {
                         val codepoint = favorites[index].codepoint
                         val scalar = codepoint.toInt(16)
                         val text = TextUtility.codepointToString(scalar)
                         Row (
-                            Modifier.fillMaxWidth().padding(15.dp, 5.dp).wrapContentHeight(),
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(15.dp, 5.dp)
+                                .wrapContentHeight(),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column (
-                                Modifier.weight(1f).padding(end = 1.dp),
+                                Modifier
+                                    .weight(1f)
+                                    .padding(end = 1.dp),
                                 verticalArrangement = Arrangement.spacedBy(2.dp),
                                 horizontalAlignment = Alignment.Start
                             ) {
@@ -241,6 +268,131 @@ class MainActivity : ComponentActivity() {
                                 }
                             ) {
                                 Icon(Icons.Default.Delete, "Delete Favorite")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun SearchPageLayout(
+        modifier: Modifier = Modifier,
+        viewModel: SearchViewModel
+    ) {
+        val results by viewModel.results.collectAsState()
+        val loading by viewModel.loading.collectAsState()
+        var query by rememberSaveable { mutableStateOf("") }
+
+        LaunchedEffect(query) {
+            viewModel.search(query)
+        }
+
+        Column (
+            modifier
+                .fillMaxSize()
+                .padding(5.dp, 0f.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            horizontalAlignment = Alignment.Companion.CenterHorizontally,
+        ) {
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = query,
+                onValueChange = { newValue -> query = newValue }
+            )
+            LazyColumn (
+                Modifier,
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                horizontalAlignment = Alignment.Companion.CenterHorizontally,
+                contentPadding = PaddingValues(0.dp, 15.dp, 0.dp, 15.dp)
+            ) {
+                if (results.isEmpty()) {
+                    if (loading) {
+                        item {
+                            CircularProgressIndicator()
+                        }
+                    } else if (query.isNotEmpty()) {
+                        item {
+                            Column(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentHeight()
+                                    .padding(5.dp, 15.dp),
+
+                                verticalArrangement = Arrangement.spacedBy(15.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text(
+                                    "No results",
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    } else {
+                        item {
+                            Column(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentHeight()
+                                    .padding(5.dp, 15.dp),
+
+                                verticalArrangement = Arrangement.spacedBy(15.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text(
+                                    "Type something to search",
+                                    fontSize = 16.sp
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    items(results.size) { index ->
+                        Card (
+                            Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight(),
+                        ) {
+                            val codepoint = results[index].codepoint
+                            val scalar = codepoint.toInt(16)
+                            val text = TextUtility.codepointToString(scalar)
+                            Row (
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(15.dp, 5.dp)
+                                    .wrapContentHeight(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column (
+                                    Modifier
+                                        .weight(1f)
+                                        .padding(end = 1.dp),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                                    horizontalAlignment = Alignment.Start
+                                ) {
+                                    Text(
+                                        results[index].name ?: "(Unnamed)",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text,
+                                        fontSize = 48.sp
+                                    )
+                                    Text(
+                                        codepoint,
+                                        fontSize = 12.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+                                IconButton(
+                                    onClick = {}
+                                ) {
+                                    Icon(Icons.Default.Star, "Favorite")
+                                }
                             }
                         }
                     }

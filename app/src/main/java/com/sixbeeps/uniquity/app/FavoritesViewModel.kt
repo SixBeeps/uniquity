@@ -13,9 +13,7 @@ import androidx.core.net.toUri
 import com.sixbeeps.uniquity.UniquityContentProvider
 
 class FavoritesViewModel(application: Application) : AndroidViewModel(application) {
-    class FavoriteData(val id: Int, val codepoint: String, val name: String?)
-
-    private val _favorites = MutableStateFlow<List<FavoriteData>>(emptyList())
+    private val _favorites = MutableStateFlow<List<NamedCharacter>>(emptyList())
     val favorites = _favorites.asStateFlow()
 
     private val contentResolver: ContentResolver = getApplication<Application>().contentResolver
@@ -39,48 +37,22 @@ class FavoritesViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    private fun queryFavorites(): List<FavoriteData> {
+    private fun queryFavorites(): List<NamedCharacter> {
         val contentUri = "content://${UniquityContentProvider.AUTHORITY}/favorites".toUri()
         val cursor = contentResolver.query(contentUri, null, null, null, null)
-        val favorites = mutableListOf<FavoriteData>()
+        val favorites = mutableListOf<NamedCharacter>()
 
         cursor?.use {
             if (it.moveToFirst()) {
-                val idColumnIndex = it.getColumnIndexOrThrow("id")
                 val codepointColumnIndex = it.getColumnIndexOrThrow("codepoint")
 
                 do {
-                    val id = it.getInt(idColumnIndex)
                     val codepoint = it.getString(codepointColumnIndex)
-                    favorites.add(FavoriteData(id, codepoint, queryDisplayName(codepoint)))
+                    val name = NamedCharacter.resolveCharacterName(codepoint, contentResolver)
+                    favorites.add(NamedCharacter(codepoint, name))
                 } while (it.moveToNext())
             }
         }
         return favorites
-    }
-
-    private fun queryDisplayName(codepoint: String): String? {
-        // First try canonical name
-        val contentUri = "content://${UniquityContentProvider.AUTHORITY}/character/$codepoint".toUri()
-        var cursor = contentResolver.query(contentUri, null, null, null, null)
-
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val nameColumnIndex = it.getColumnIndexOrThrow("name")
-                return it.getString(nameColumnIndex)
-            }
-        }
-
-        // Then try alias
-        val aliasContentUri = "content://${UniquityContentProvider.AUTHORITY}/character/alias/$codepoint".toUri()
-        cursor = contentResolver.query(aliasContentUri, null, null, null, null)
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val nameColumnIndex = it.getColumnIndexOrThrow("alias")
-                return it.getString(nameColumnIndex)
-            }
-        }
-
-        return null
     }
 }

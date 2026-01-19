@@ -68,8 +68,14 @@ class UniquityContentProvider : ContentProvider() {
                 cursor.setNotificationUri(context?.contentResolver, uri)
                 cursor
             }
+            CODE_CHARACTER_SEARCH -> {
+                val query = uri.lastPathSegment ?: return null
+                val cursor = AppDatabase.getDatabase(ctx).unicodeDao().searchUnicodeCharactersSync(query)
+                cursor.setNotificationUri(context?.contentResolver, uri)
+                cursor
+            }
             else -> {
-                throw IllegalArgumentException("Unknown URI: $uri")
+                throw IllegalArgumentException("Unknown code $code with URI: $uri")
             }
         }
     }
@@ -90,12 +96,15 @@ class UniquityContentProvider : ContentProvider() {
         const val CODE_FAVORITES_ID = 2
         const val CODE_CHARACTER_ID = 3
         const val CODE_CHARACTER_ALIAS_ID = 4
+        const val CODE_CHARACTER_SEARCH = 5
 
         init {
             MATCHER.addURI(AUTHORITY, "favorites", CODE_FAVORITES)
             MATCHER.addURI(AUTHORITY, "favorites/*", CODE_FAVORITES_ID)
+            MATCHER.addURI(AUTHORITY, "alias/*", CODE_CHARACTER_ALIAS_ID)
             MATCHER.addURI(AUTHORITY, "character/*", CODE_CHARACTER_ID)
-            MATCHER.addURI(AUTHORITY, "character/alias/*", CODE_CHARACTER_ALIAS_ID)
+            MATCHER.addURI(AUTHORITY, "search/character/", CODE_CHARACTER_SEARCH)
+            MATCHER.addURI(AUTHORITY, "search/character/*", CODE_CHARACTER_SEARCH)
         }
     }
 }
