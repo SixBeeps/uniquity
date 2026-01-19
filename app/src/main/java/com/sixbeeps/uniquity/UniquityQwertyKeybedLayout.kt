@@ -1,17 +1,10 @@
 package com.sixbeeps.uniquity
 
 import android.content.Context
-import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.LinearLayout.LayoutParams
-import android.widget.ScrollView
 import android.widget.Button
 import androidx.core.content.ContextCompat
-import androidx.core.view.children
-import androidx.core.view.setPadding
-
 class UniquityQwertyKeybedLayout @JvmOverloads constructor(private var context: Context, height: Int = 10) :
     LinearLayout(context) {
 
@@ -50,14 +43,14 @@ class UniquityQwertyKeybedLayout @JvmOverloads constructor(private var context: 
             rowLayout.layoutParams = LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT,
-                if (rowIndex == 0) 1f else 0f // Anchor the numeric keys to the top
+                if (rowIndex == 0) 2f else 1f // Anchor the numeric keys to the top
             )
             addView(rowLayout)
 
             // On the fourth row, add a shift key to the left
             if (rowIndex == 3) {
                 val shiftKey = Button(context)
-                shiftKey.setText("⇧")
+                shiftKey.text = "⇧"
                 shiftKey.layoutParams = LayoutParams(
                     0,
                     LayoutParams.MATCH_PARENT,
