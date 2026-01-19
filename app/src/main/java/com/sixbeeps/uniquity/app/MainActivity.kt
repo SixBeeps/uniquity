@@ -213,7 +213,9 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             IconButton(
-                                onClick = {}
+                                onClick = {
+                                    viewModel.removeFromFavorites(codepoint)
+                                }
                             ) {
                                 Icon(Icons.Default.Delete, "Delete Favorite")
                             }

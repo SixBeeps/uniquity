@@ -13,7 +13,17 @@ class UniquityContentProvider : ContentProvider() {
         selection: String?,
         selectionArgs: Array<out String?>?
     ): Int {
-        TODO("Not yet implemented")
+        val code = MATCHER.match(uri)
+        val ctx = context ?: return 0
+        return when (code) {
+            CODE_FAVORITES_ID -> {
+                val codepoint = uri.lastPathSegment ?: return 0
+                AppDatabase.getDatabase(ctx).unicodeDao().removeFromFavoritesSync(codepoint)
+            }
+            else -> {
+                throw IllegalArgumentException("Unknown URI: $uri")
+            }
+        }
     }
 
     override fun getType(uri: Uri): String? {
@@ -63,11 +73,13 @@ class UniquityContentProvider : ContentProvider() {
 
     companion object {
         private val MATCHER = UriMatcher(UriMatcher.NO_MATCH)
-        private const val AUTHORITY = "com.sixbeeps.uniquity.provider"
-        private const val CODE_FAVORITES = 1
+        const val AUTHORITY = "com.sixbeeps.uniquity.provider"
+        const val CODE_FAVORITES = 1
+        const val CODE_FAVORITES_ID = 2
 
         init {
             MATCHER.addURI(AUTHORITY, "favorites", CODE_FAVORITES)
+            MATCHER.addURI(AUTHORITY, "favorites/*", CODE_FAVORITES_ID)
         }
     }
 }

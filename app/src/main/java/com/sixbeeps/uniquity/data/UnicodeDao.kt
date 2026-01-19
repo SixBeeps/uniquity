@@ -33,6 +33,9 @@ interface UnicodeDao {
     @Query("DELETE FROM Favorite WHERE codepoint = :codepoint")
     suspend fun removeFromFavorites(codepoint: String)
 
+    @Query("DELETE FROM Favorite WHERE codepoint = :codepoint")
+    fun removeFromFavoritesSync(codepoint: String): Int
+
     @Query("SELECT COUNT(*) FROM Favorite WHERE codepoint = :codepoint")
     suspend fun isFavorite(codepoint: String): Int
 }
