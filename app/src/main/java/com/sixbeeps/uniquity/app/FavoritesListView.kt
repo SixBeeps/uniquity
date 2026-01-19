@@ -11,7 +11,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
 import com.sixbeeps.uniquity.UniquityContentProvider
-import com.sixbeeps.uniquity.data.Favorite
 
 class FavoritesViewModel(application: Application) : AndroidViewModel(application) {
     class FavoriteData(val id: Int, val codepoint: String, val name: String?)
