@@ -6,6 +6,7 @@ import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -87,7 +88,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun MainAppLayout() {
         val navController = rememberNavController()
-        val startPage = Page.SEARCH
+        val startPage = Page.FAVORITES
         var currentPage by rememberSaveable { mutableIntStateOf(startPage.ordinal) }
 
         Scaffold(
@@ -238,8 +239,12 @@ class MainActivity : ComponentActivity() {
                                 .padding(15.dp, 5.dp)
                                 .wrapContentHeight(),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.spacedBy(15.dp)
                         ) {
+                            Text(
+                                text,
+                                fontSize = 48.sp
+                            )
                             Column (
                                 Modifier
                                     .weight(1f)
@@ -251,10 +256,6 @@ class MainActivity : ComponentActivity() {
                                     favorites[index].name ?: "(Unnamed)",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text,
-                                    fontSize = 48.sp
                                 )
                                 Text(
                                     codepoint,
@@ -364,8 +365,12 @@ class MainActivity : ComponentActivity() {
                                     .padding(15.dp, 5.dp)
                                     .wrapContentHeight(),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.spacedBy(15.dp)
                             ) {
+                                Text(
+                                    text,
+                                    fontSize = 48.sp
+                                )
                                 Column (
                                     Modifier
                                         .weight(1f)
@@ -377,10 +382,6 @@ class MainActivity : ComponentActivity() {
                                         results[index].name ?: "(Unnamed)",
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text,
-                                        fontSize = 48.sp
                                     )
                                     Text(
                                         codepoint,
