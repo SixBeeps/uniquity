@@ -580,7 +580,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
             viewScope.launch {
                 try {
                     // Check if already favorited to avoid duplicates
-                    val isAlreadyFavorite = AppDatabase.getDatabase(context).unicodeDao()?.isFavorite(codepoint) ?: 0
+                    val isAlreadyFavorite = AppDatabase.getDatabase(context).unicodeDao().isFavorite(codepoint)
                     if (isAlreadyFavorite == 0) {
                         AppDatabase.getDatabase(context).unicodeDao().addToFavorites(codepoint)
                         

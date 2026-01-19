@@ -47,7 +47,7 @@ class UniquityContentProvider : ContentProvider() {
                 cursor
             }
             else -> {
-                throw IllegalArgumentException("Unknown URI: $uri");
+                throw IllegalArgumentException("Unknown URI: $uri")
             }
         }
     }
@@ -62,9 +62,9 @@ class UniquityContentProvider : ContentProvider() {
     }
 
     companion object {
-        private val MATCHER = UriMatcher(UriMatcher.NO_MATCH);
+        private val MATCHER = UriMatcher(UriMatcher.NO_MATCH)
         private const val AUTHORITY = "com.sixbeeps.uniquity.provider"
-        private const val CODE_FAVORITES = 1;
+        private const val CODE_FAVORITES = 1
 
         init {
             MATCHER.addURI(AUTHORITY, "favorites", CODE_FAVORITES)

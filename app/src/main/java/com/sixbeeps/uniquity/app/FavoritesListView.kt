@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
-import com.sixbeeps.uniquity.data.Favorite;
+import com.sixbeeps.uniquity.data.Favorite
 
 class FavoritesViewModel(application: Application) : AndroidViewModel(application) {
     private val _favorites = MutableStateFlow<List<Favorite>>(emptyList())
