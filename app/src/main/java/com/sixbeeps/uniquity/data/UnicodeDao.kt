@@ -1,5 +1,6 @@
 package com.sixbeeps.uniquity.data
 
+import android.database.Cursor
 import androidx.room.Dao
 import androidx.room.Query
 
@@ -22,6 +23,9 @@ interface UnicodeDao {
 
     @Query("SELECT * FROM Favorite ORDER BY id ASC")
     suspend fun getFavorites(): List<Favorite>?
+
+    @Query("SELECT * FROM Favorite ORDER BY id ASC")
+    fun getFavoritesSync(): Cursor
 
     @Query("INSERT OR IGNORE INTO Favorite (codepoint) VALUES (:codepoint)")
     suspend fun addToFavorites(codepoint: String)

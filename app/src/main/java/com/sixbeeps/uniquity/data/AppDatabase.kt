@@ -18,17 +18,32 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun unicodeDao(): UnicodeDao
 
     companion object {
+        @Volatile
         var INSTANCE: AppDatabase? = null
-        fun init(context: Context) {
+//        fun init(context: Context) {
+//            if (INSTANCE != null) {
+//                Log.w("AppDatabase", "Attempted to re-initialize database, ignoring")
+//                return
+//            }
+//
+//            INSTANCE = databaseBuilder(context, AppDatabase::class.java, "unicode")
+//                .fallbackToDestructiveMigration(true)
+//                .createFromAsset("ucd.db")
+//                .build()
+//        }
+        fun getDatabase(context: Context): AppDatabase {
             if (INSTANCE != null) {
-                Log.w("AppDatabase", "Attempted to re-initialize database, ignoring")
-                return
+                return INSTANCE!!
             }
 
-            INSTANCE = databaseBuilder(context, AppDatabase::class.java, "unicode")
-                .fallbackToDestructiveMigration(true)
-                .createFromAsset("ucd.db")
-                .build()
+            synchronized(this) {
+                val newInstance = databaseBuilder(context, AppDatabase::class.java, "unicode")
+                    .createFromAsset("ucd.db")
+                    .build()
+
+                INSTANCE = newInstance
+                return newInstance
+            }
         }
     }
 }

@@ -17,5 +17,10 @@ class Favorite {
 
     @JvmField
     var codepoint: String? = null
+
+    constructor(id: Int, codepoint: String?) {
+        this.id = id
+        this.codepoint = codepoint
+    }
 }
 

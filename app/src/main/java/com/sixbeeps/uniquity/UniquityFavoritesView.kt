@@ -51,25 +51,16 @@ class UniquityFavoritesView @JvmOverloads constructor(
     private fun loadFavorites() {
         viewScope.launch {
             try {
-                val favorites = AppDatabase.INSTANCE?.unicodeDao()?.getFavorites()
+                val favorites = AppDatabase.getDatabase(context).unicodeDao().getFavorites()
                 val favoriteKeys = mutableListOf<UniquityKey>()
                 
                 if (favorites != null && favorites.isNotEmpty()) {
                     for (favorite in favorites) {
                         // Get the character details for each favorite
-                        val character = AppDatabase.INSTANCE?.unicodeDao()?.getUnicodeCharacter(favorite.codepoint)
+                        val character = AppDatabase.getDatabase(context).unicodeDao().getUnicodeCharacter(favorite.codepoint)
                         if (character != null) {
                             val scalar = character.codepoint.toInt(16)
-                            
-                            // Handle surrogate pairs if necessary
-                            val text: String = if (scalar > 0xFFFF) {
-                                val high = (scalar - 0x10000) / 0x400 + 0xD800
-                                val low = (scalar - 0x10000) % 0x400 + 0xDC00
-                                String(Character.toChars(high)) + String(Character.toChars(low))
-                            } else {
-                                String(Character.toChars(scalar))
-                            }
-                            
+                            val text = TextUtility.codepointToString(scalar)
                             val key = UniquityKey(text, text, character.codepoint)
                             favoriteKeys.add(key)
                         }

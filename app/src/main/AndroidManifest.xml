@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
+        android:name=".app.UniquityApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -13,8 +14,15 @@
         android:roundIcon="@mipmap/uniquity_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Uniquity">
+
+        <provider
+            android:authorities="com.sixbeeps.uniquity.provider"
+            android:name=".UniquityContentProvider"
+            android:exported="true"
+            android:enabled="true" />
+
         <activity
-            android:name=".MainActivity"
+            android:name=".app.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Uniquity">
@@ -24,6 +32,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <service
             android:name=".UniquityInputMethodService"
             android:exported="true"

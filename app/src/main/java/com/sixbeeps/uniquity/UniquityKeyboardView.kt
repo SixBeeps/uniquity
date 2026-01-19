@@ -73,8 +73,6 @@ class UniquityKeyboardView @JvmOverloads constructor(
     private var currentSelectedGroup: UnicodeGroup? = null
 
     init {
-        AppDatabase.init(context)
-
         orientation = VERTICAL
 
         val fixedHeightInPx = TypedValue.applyDimension(
@@ -170,7 +168,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
         refreshTabStrip()
 
         // Get Unicode groups from the database and store them
-        val groups = AppDatabase.INSTANCE?.unicodeDao()?.getInstalledUnicodeGroups()
+        val groups = AppDatabase.getDatabase(context).unicodeDao().getInstalledUnicodeGroups()
         if (groups != null) {
             allUnicodeGroups = ArrayList()
             allUnicodeGroups!!.addAll(groups)
@@ -196,22 +194,12 @@ class UniquityKeyboardView @JvmOverloads constructor(
         refreshCommandStrip()
 
         // Load characters from the database
-        val characters = AppDatabase.INSTANCE?.unicodeDao()?.getUnicodeCharacters(currentSelectedGroup!!.name)
+        val characters = AppDatabase.getDatabase(context).unicodeDao().getUnicodeCharacters(currentSelectedGroup!!.name)
         keys = ArrayList()
         if (characters != null) {
             for (character in characters) {
                 val scalar = character.codepoint.toInt(16)
-
-                // Handle surrogate pairs if necessary
-                val text: String?
-                if (scalar > 0xFFFF) {
-                    val high = (scalar - 0x10000) / 0x400 + 0xD800
-                    val low = (scalar - 0x10000) % 0x400 + 0xDC00
-                    text = String(Character.toChars(high)) + String(Character.toChars(low))
-                } else {
-                    text = String(Character.toChars(scalar))
-                }
-
+                val text = TextUtility.codepointToString(scalar)
                 val key = UniquityKey(text, text, character.codepoint)
                 keys!!.add(key)
             }
@@ -592,9 +580,9 @@ class UniquityKeyboardView @JvmOverloads constructor(
             viewScope.launch {
                 try {
                     // Check if already favorited to avoid duplicates
-                    val isAlreadyFavorite = AppDatabase.INSTANCE?.unicodeDao()?.isFavorite(codepoint) ?: 0
+                    val isAlreadyFavorite = AppDatabase.getDatabase(context).unicodeDao()?.isFavorite(codepoint) ?: 0
                     if (isAlreadyFavorite == 0) {
-                        AppDatabase.INSTANCE?.unicodeDao()?.addToFavorites(codepoint)
+                        AppDatabase.getDatabase(context).unicodeDao().addToFavorites(codepoint)
                         
                         // Refresh favorites view if it's currently active
                         if (currentActiveView == ActiveView.FAVORITES) {
@@ -615,7 +603,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
         if (codepoint != null) {
             viewScope.launch {
                 try {
-                    AppDatabase.INSTANCE?.unicodeDao()?.removeFromFavorites(codepoint)
+                    AppDatabase.getDatabase(context).unicodeDao().removeFromFavorites(codepoint)
 
                     // Refresh favorites view if it's currently active
                     if (currentActiveView == ActiveView.FAVORITES) {
