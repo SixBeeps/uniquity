@@ -18,8 +18,14 @@ interface UnicodeDao {
     @Query("SELECT * FROM UnicodeCharacter WHERE codepoint = :codepoint")
     suspend fun getUnicodeCharacter(codepoint: String?): UnicodeCharacter?
 
+    @Query("SELECT * FROM UnicodeCharacter WHERE codepoint = :codepoint")
+    fun getUnicodeCharacterSync(codepoint: String?): Cursor
+
     @Query("SELECT * FROM UnicodeCharacterAlias WHERE codepoint = :codepoint")
     suspend fun getUnicodeCharacterAliases(codepoint: String?): List<UnicodeCharacterAlias>?
+
+    @Query("SELECT * FROM UnicodeCharacterAlias WHERE codepoint = :codepoint")
+    fun getUnicodeCharacterAliasesSync(codepoint: String?): Cursor
 
     @Query("SELECT * FROM Favorite ORDER BY id ASC")
     suspend fun getFavorites(): List<Favorite>?

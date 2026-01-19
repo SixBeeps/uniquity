@@ -56,6 +56,18 @@ class UniquityContentProvider : ContentProvider() {
                 cursor.setNotificationUri(context?.contentResolver, uri)
                 cursor
             }
+            CODE_CHARACTER_ID -> {
+                val codepoint = uri.lastPathSegment ?: return null
+                val cursor = AppDatabase.getDatabase(ctx).unicodeDao().getUnicodeCharacterSync(codepoint)
+                cursor.setNotificationUri(context?.contentResolver, uri)
+                cursor
+            }
+            CODE_CHARACTER_ALIAS_ID -> {
+                val codepoint = uri.lastPathSegment ?: return null
+                val cursor = AppDatabase.getDatabase(ctx).unicodeDao().getUnicodeCharacterAliasesSync(codepoint)
+                cursor.setNotificationUri(context?.contentResolver, uri)
+                cursor
+            }
             else -> {
                 throw IllegalArgumentException("Unknown URI: $uri")
             }
@@ -76,10 +88,14 @@ class UniquityContentProvider : ContentProvider() {
         const val AUTHORITY = "com.sixbeeps.uniquity.provider"
         const val CODE_FAVORITES = 1
         const val CODE_FAVORITES_ID = 2
+        const val CODE_CHARACTER_ID = 3
+        const val CODE_CHARACTER_ALIAS_ID = 4
 
         init {
             MATCHER.addURI(AUTHORITY, "favorites", CODE_FAVORITES)
             MATCHER.addURI(AUTHORITY, "favorites/*", CODE_FAVORITES_ID)
+            MATCHER.addURI(AUTHORITY, "character/*", CODE_CHARACTER_ID)
+            MATCHER.addURI(AUTHORITY, "character/alias/*", CODE_CHARACTER_ALIAS_ID)
         }
     }
 }

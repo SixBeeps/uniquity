@@ -44,6 +44,7 @@ for event, elem in tree:
     elem.clear()
   elif tag == "char":
     cp = elem.get("cp")
+    na = elem.get("na")
     na1 = elem.get("na1")
     if cp is None:
       print("[WARN] Character element without 'cp' attribute found. Skipping.")
@@ -56,7 +57,7 @@ for event, elem in tree:
       elem.clear()
       continue
     cursor.execute("INSERT INTO UnicodeCharacter (codepoint, name, groupName) VALUES (?, ?, ?)",
-                   (cp, na1, group_name))
+                   (cp, na1 if not na else na, group_name))
     elem.clear()
   elif tag == "name-alias":
     if cp is None:
