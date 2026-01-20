@@ -27,9 +27,9 @@ class FavoritesViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun removeFromFavorites(codepoint: String) {
+    fun removeFromFavorites(id: Int) {
         viewModelScope.launch {
-            val contentUri = "content://${UniquityContentProvider.AUTHORITY}/favorites/$codepoint".toUri()
+            val contentUri = "content://${UniquityContentProvider.AUTHORITY}/favorites/$id".toUri()
             val deleted = withContext(Dispatchers.IO) {
                 contentResolver.delete(contentUri, null, null)
             }
@@ -44,12 +44,14 @@ class FavoritesViewModel(application: Application) : AndroidViewModel(applicatio
 
         cursor?.use {
             if (it.moveToFirst()) {
+                val idColumnIndex = it.getColumnIndexOrThrow("id")
                 val codepointColumnIndex = it.getColumnIndexOrThrow("codepoint")
 
                 do {
+                    val id = it.getInt(idColumnIndex)
                     val codepoint = it.getString(codepointColumnIndex)
                     val name = NamedCharacter.resolveCharacterName(codepoint, contentResolver)
-                    favorites.add(NamedCharacter(codepoint, name))
+                    favorites.add(NamedCharacter(codepoint, name, id))
                 } while (it.moveToNext())
             }
         }

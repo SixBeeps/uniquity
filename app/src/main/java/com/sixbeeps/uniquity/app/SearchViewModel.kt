@@ -37,13 +37,22 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             val resultsList = withContext(Dispatchers.IO) {
                 queryCharacterSearch(query)
             }
-            println("got ${resultsList.size} results")
             _results.value = resultsList
         }
 
         searchJob?.invokeOnCompletion {
             searchJob = null
             loading.value = false
+        }
+    }
+
+    fun addToFavorites(codepoint: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val inserted = withContext(Dispatchers.IO) {
+                insertFavorite(codepoint)
+            }
+
+            onResult(inserted)
         }
     }
 
@@ -64,5 +73,11 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
         return results
+    }
+
+    private fun insertFavorite(codepoint: String): Boolean {
+        val contentUri = "content://${UniquityContentProvider.AUTHORITY}/favorites/$codepoint".toUri()
+        val cursor = contentResolver.insert(contentUri, null)
+        return cursor != null
     }
 }

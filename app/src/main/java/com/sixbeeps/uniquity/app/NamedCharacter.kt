@@ -4,7 +4,7 @@ import android.content.ContentResolver
 import androidx.core.net.toUri
 import com.sixbeeps.uniquity.UniquityContentProvider
 
-class NamedCharacter(val codepoint: String, val name: String?) {
+class NamedCharacter(val codepoint: String, val name: String?, val id: Int? = null) {
     companion object {
         fun resolveCharacterName(codepoint: String, contentResolver: ContentResolver): String? {
             // First try canonical name

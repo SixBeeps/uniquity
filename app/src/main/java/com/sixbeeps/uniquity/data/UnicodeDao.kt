@@ -40,14 +40,17 @@ interface UnicodeDao {
     @Query("SELECT * FROM Favorite ORDER BY id ASC")
     fun getFavoritesSync(): Cursor
 
-    @Query("INSERT OR IGNORE INTO Favorite (codepoint) VALUES (:codepoint)")
+    @Query("INSERT INTO Favorite (codepoint) VALUES (:codepoint)")
     suspend fun addToFavorites(codepoint: String)
+
+    @Query("INSERT INTO Favorite (codepoint) VALUES (:codepoint)")
+    fun addToFavoritesSync(codepoint: String): Long
 
     @Query("DELETE FROM Favorite WHERE codepoint = :codepoint")
     suspend fun removeFromFavorites(codepoint: String)
 
-    @Query("DELETE FROM Favorite WHERE codepoint = :codepoint")
-    fun removeFromFavoritesSync(codepoint: String): Int
+    @Query("DELETE FROM Favorite WHERE id = :id")
+    fun removeFromFavoritesSync(id: Int): Int
 
     @Query("SELECT COUNT(*) FROM Favorite WHERE codepoint = :codepoint")
     suspend fun isFavorite(codepoint: String): Int

@@ -6,6 +6,7 @@ import android.content.UriMatcher
 import android.database.Cursor
 import android.net.Uri
 import com.sixbeeps.uniquity.data.AppDatabase
+import androidx.core.net.toUri
 
 class UniquityContentProvider : ContentProvider() {
     override fun delete(
@@ -17,8 +18,8 @@ class UniquityContentProvider : ContentProvider() {
         val ctx = context ?: return 0
         return when (code) {
             CODE_FAVORITES_ID -> {
-                val codepoint = uri.lastPathSegment ?: return 0
-                AppDatabase.getDatabase(ctx).unicodeDao().removeFromFavoritesSync(codepoint)
+                val id = uri.lastPathSegment?.toInt() ?: return 0
+                AppDatabase.getDatabase(ctx).unicodeDao().removeFromFavoritesSync(id)
             }
             else -> {
                 throw IllegalArgumentException("Unknown URI: $uri")
@@ -34,7 +35,22 @@ class UniquityContentProvider : ContentProvider() {
         uri: Uri,
         values: ContentValues?
     ): Uri? {
-        TODO("Not yet implemented")
+        val code = MATCHER.match(uri)
+        val ctx = context ?: return null
+        return when (code) {
+            CODE_FAVORITES_ID -> {
+                val codepoint = uri.lastPathSegment ?: return null
+                val id = AppDatabase.getDatabase(ctx).unicodeDao().addToFavoritesSync(codepoint)
+                if (id >= 0) {
+                    "content://$AUTHORITY/favorites/$codepoint".toUri()
+                } else {
+                    null
+                }
+            }
+            else -> {
+                throw IllegalArgumentException("Unknown URI: $uri")
+            }
+        }
     }
 
     override fun onCreate(): Boolean {

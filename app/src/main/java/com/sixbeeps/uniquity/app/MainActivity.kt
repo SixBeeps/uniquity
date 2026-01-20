@@ -34,6 +34,8 @@ import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +44,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -62,6 +65,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.sixbeeps.uniquity.TextUtility
 import com.sixbeeps.uniquity.ui.theme.UniquityTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -90,9 +94,11 @@ class MainActivity : ComponentActivity() {
         val navController = rememberNavController()
         val startPage = Page.FAVORITES
         var currentPage by rememberSaveable { mutableIntStateOf(startPage.ordinal) }
+        val snackbarHostState = remember { SnackbarHostState() }
 
         Scaffold(
             modifier = Modifier.Companion.fillMaxSize(),
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
                 NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
                     Page.entries.forEachIndexed { index, page ->
@@ -111,9 +117,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
         ) { innerPadding ->
-            AppNavHost(navController, startPage, Modifier
-                .padding(innerPadding)
-                .fillMaxSize())
+            AppNavHost(
+                navController,
+                startPage,
+                snackbarHostState,
+                Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize())
         }
     }
 
@@ -121,6 +131,7 @@ class MainActivity : ComponentActivity() {
     fun AppNavHost(
         navController: NavHostController,
         startPage: Page,
+        snackbarHostState: SnackbarHostState,
         modifier: Modifier = Modifier
     ) {
         val viewModelFactory = (LocalContext.current.applicationContext as? HasDefaultViewModelProviderFactory)?.defaultViewModelProviderFactory
@@ -146,7 +157,7 @@ class MainActivity : ComponentActivity() {
                             }
 
                             val viewModel: SearchViewModel = viewModel (factory = viewModelFactory)
-                            SearchPageLayout(Modifier.fillMaxHeight(), viewModel)
+                            SearchPageLayout(Modifier.fillMaxHeight(), viewModel, snackbarHostState)
                         }
                     }
                 }
@@ -265,7 +276,7 @@ class MainActivity : ComponentActivity() {
                             }
                             IconButton(
                                 onClick = {
-                                    viewModel.removeFromFavorites(codepoint)
+                                    viewModel.removeFromFavorites(favorites[index].id!!)
                                 }
                             ) {
                                 Icon(Icons.Default.Delete, "Delete Favorite")
@@ -280,11 +291,13 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun SearchPageLayout(
         modifier: Modifier = Modifier,
-        viewModel: SearchViewModel
+        viewModel: SearchViewModel,
+        snackbarHostState: SnackbarHostState
     ) {
         val results by viewModel.results.collectAsState()
         val loading by viewModel.loading.collectAsState()
         var query by rememberSaveable { mutableStateOf("") }
+        val scope = rememberCoroutineScope()
 
         LaunchedEffect(query) {
             viewModel.search(query)
@@ -300,7 +313,9 @@ class MainActivity : ComponentActivity() {
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = query,
-                onValueChange = { newValue -> query = newValue }
+                onValueChange = { newValue -> query = newValue },
+                label = { Text("Search for characters...") },
+                leadingIcon = { Icon(Icons.Default.Search, "Search") }
             )
             LazyColumn (
                 Modifier,
@@ -390,7 +405,15 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                                 IconButton(
-                                    onClick = {}
+                                    onClick = {
+                                        viewModel.addToFavorites(codepoint) {
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar(
+                                                    if (it) "Added $text to favorites" else "Failed to add $text to favorites"
+                                                )
+                                            }
+                                        }
+                                    }
                                 ) {
                                     Icon(Icons.Default.Star, "Favorite")
                                 }
