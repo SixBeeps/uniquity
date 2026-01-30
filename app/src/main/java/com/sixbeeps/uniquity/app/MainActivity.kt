@@ -90,7 +90,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun MainAppLayout() {
         val navController = rememberNavController()
-        val startPage = Page.FAVORITES
+        val startPage = Page.TEST
         var currentPage by rememberSaveable { mutableIntStateOf(startPage.ordinal) }
         val snackbarHostState = remember { SnackbarHostState() }
 

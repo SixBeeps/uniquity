@@ -107,8 +107,8 @@ class UniquityKeyboardView @JvmOverloads constructor(
         favoritesTabView.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, fixedHeightInPx)
         
         addView(keybed)
-        addView(qwertyKeybed)
         addView(favoritesTabView)
+        addView(qwertyKeybed)
 
         // Separator
         val separator = View(context)
@@ -392,15 +392,7 @@ class UniquityKeyboardView @JvmOverloads constructor(
         )
         qwertyButton.setOnClickListener { v: View? ->
             useQwerty = !useQwerty
-            if (useQwerty) {
-                Log.d("qwerty", "qwerty")
-                qwertyKeybed.visibility = VISIBLE
-                keybed.visibility = GONE
-            } else {
-                Log.d("qwerty", "no qwerty")
-                qwertyKeybed.visibility = GONE
-                keybed.visibility = VISIBLE
-            }
+            qwertyKeybed.visibility = if (useQwerty) VISIBLE else GONE
         }
         commandStripLayout.addView(qwertyButton)
 
@@ -531,14 +523,13 @@ class UniquityKeyboardView @JvmOverloads constructor(
         
         when (view) {
             ActiveView.KEYBED -> {
-                keybed.visibility = if (useQwerty) GONE else VISIBLE
-                qwertyKeybed.visibility = if (useQwerty) VISIBLE else GONE
+                keybed.visibility = VISIBLE
                 favoritesTabView.visibility = GONE
             }
             ActiveView.FAVORITES -> {
                 keybed.visibility = GONE
-                qwertyKeybed.visibility = GONE
                 favoritesTabView.visibility = VISIBLE
+
                 // Refresh favorites whenever the view opens
                 favoritesTabView.refreshFavorites()
             }
